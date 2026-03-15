@@ -1,0 +1,32 @@
+name: Check main sync
+
+on:
+  workflow_call:
+
+jobs:
+  check-main-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Buscar referência da main
+        run: git fetch origin main:refs/remotes/origin/main
+
+      - name: Verificar se a branch está atualizada com a main
+        run: |
+          MAIN_SHA=$(git rev-parse origin/main)
+          BASE_SHA=$(git merge-base HEAD origin/main)
+
+          echo "MAIN_SHA=$MAIN_SHA"
+          echo "BASE_SHA=$BASE_SHA"
+
+          if [ "$MAIN_SHA" != "$BASE_SHA" ]; then
+            echo "Sua branch não está atualizada com a main."
+            exit 1
+          fi
+
+          echo "Branch atualizada com a main."
