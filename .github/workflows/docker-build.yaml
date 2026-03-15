@@ -1,0 +1,23 @@
+name: Docker build
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        required: true
+        type: string
+      context_dir:
+        required: false
+        type: string
+        default: .
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Build da imagem Docker
+        run: docker build -t ${{ inputs.image_name }}:${{ github.sha }} ${{ inputs.context_dir }}
