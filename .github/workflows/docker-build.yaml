@@ -60,3 +60,8 @@ jobs:
         # ${{ github.sha }} usa o hash do commit atual como tag da imagem
         # Isso ajuda a versionar as imagens automaticamente
         # ${{ inputs.context_dir }} define qual pasta será usada como contexto para o Docker build
+
+      # Terceiro passo: rodar a imagem Docker para verificar se ela funciona
+      - name: Rodar a imagem Docker
+        run: docker run -d --name my-container -p 8080:80 ${{ inputs.image_name }}:${{ github.sha }}
+        # Executa a imagem Docker criada para verificar se ela funciona corretamente
