@@ -1,32 +1,74 @@
+# Nome do workflow reutilizável
+# Esse nome aparece quando o workflow é chamado por outro repositório
 name: Check main sync
 
+# Define quando esse workflow pode ser executado
+# workflow_call significa que ele NÃO roda sozinho
+# Ele só roda quando outro workflow chamar ele
 on:
   workflow_call:
 
+# Define os jobs (tarefas) que o workflow executa
 jobs:
+  # Identificador do job
+  # Esse job tem a função de verificar se a branch atual está sincronizada com a main
   check-main-sync:
+
+    # Define o sistema operacional da máquina virtual que executará o job
+    # ubuntu-latest é o runner padrão do GitHub Actions
     runs-on: ubuntu-latest
 
+    # Lista de passos que serão executados dentro do job
     steps:
+
+      # Primeiro passo: baixar o código do repositório que chamou o workflow
       - name: Checkout do código
+
+        # Action oficial do GitHub para fazer checkout do repositório
         uses: actions/checkout@v4
+
         with:
+          # fetch-depth 0 significa baixar o histórico completo do Git
+          # Isso é necessário para que comandos como merge-base funcionem
           fetch-depth: 0
 
+      # Segundo passo: buscar a referência da branch main do repositório remoto
       - name: Buscar referência da main
+
+        # Esse comando traz a branch main do repositório remoto (origin)
+        # e garante que ela exista localmente dentro do runner
         run: git fetch origin main:refs/remotes/origin/main
 
+      # Terceiro passo: verificar se a branch atual contém o último commit da main
       - name: Verificar se a branch está atualizada com a main
+
+        # Executa vários comandos bash
         run: |
+
+          # Captura o SHA (hash) do último commit da branch main
           MAIN_SHA=$(git rev-parse origin/main)
+
+          # Descobre o commit base entre a branch atual (HEAD) e a main
+          # merge-base retorna o commit comum entre as duas
           BASE_SHA=$(git merge-base HEAD origin/main)
 
+          # Imprime o SHA do último commit da main
           echo "MAIN_SHA=$MAIN_SHA"
+
+          # Imprime o SHA do commit base entre as branches
           echo "BASE_SHA=$BASE_SHA"
 
+          # Verifica se os dois commits são diferentes
+          # Se forem diferentes significa que a branch atual está desatualizada
           if [ "$MAIN_SHA" != "$BASE_SHA" ]; then
+
+            # Mensagem informando que a branch não contém o último commit da main
             echo "Sua branch não está atualizada com a main."
+
+            # exit 1 faz o job falhar
+            # Isso bloqueia a pipeline e impede o merge
             exit 1
           fi
 
+          # Se os commits forem iguais, significa que a branch está atualizada
           echo "Branch atualizada com a main."

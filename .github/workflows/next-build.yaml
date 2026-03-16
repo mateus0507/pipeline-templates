@@ -1,28 +1,66 @@
+# Nome do workflow reutilizável
+# Esse template é responsável por realizar o build da aplicação Next.js
 name: Next build
 
+# Define quando esse workflow pode ser executado
+# workflow_call significa que ele não roda sozinho
+# Ele só executa quando outro workflow chamar esse template
 on:
   workflow_call:
+
+    # Define os parâmetros que podem ser recebidos do workflow que chamar este template
     inputs:
+
+      # Define a versão do Node.js que será usada no build
       node_version:
+
+        # Esse parâmetro não é obrigatório
         required: false
+
+        # Tipo do parâmetro
         type: string
+
+        # Valor padrão caso nada seja enviado pelo workflow que chamou
         default: "20"
 
+# Define os jobs que serão executados
 jobs:
+
+  # Nome do job responsável pelo build da aplicação
   build:
+
+    # Define o sistema operacional do runner do GitHub Actions
+    # ubuntu-latest é o ambiente padrão usado na maioria das pipelines
     runs-on: ubuntu-latest
 
+    # Lista de etapas que serão executadas dentro do job
     steps:
+
+      # Primeiro passo: baixar o código do repositório que chamou o workflow
       - name: Checkout do código
+
+        # Action oficial do GitHub que faz o checkout do repositório no runner
         uses: actions/checkout@v4
 
+      # Segundo passo: configurar o ambiente Node.js
       - name: Configurar Node.js
+
+        # Action oficial que instala a versão do Node.js desejada
         uses: actions/setup-node@v4
+
+        # Define qual versão do Node será instalada
         with:
           node-version: ${{ inputs.node_version }}
 
+      # Terceiro passo: instalar as dependências do projeto
       - name: Instalar dependências
+
+        # Executa o comando npm install para baixar todas as dependências listadas no package.json
         run: npm install
 
+      # Quarto passo: gerar o build da aplicação
       - name: Gerar build da aplicação
+
+        # Executa o script "build" definido no package.json
+        # No caso de projetos Next.js, normalmente roda "next build"
         run: npm run build

@@ -1,23 +1,62 @@
+# Nome do workflow reutilizável
+# Esse template é responsável por criar a imagem Docker da aplicação
 name: Docker build
 
+# Define quando esse workflow pode ser executado
+# workflow_call significa que ele só será executado quando outro workflow chamar este template
 on:
   workflow_call:
+
+    # Define os parâmetros (inputs) que podem ser enviados pelo workflow que chamar este template
     inputs:
+
+      # Nome da imagem Docker que será criada
       image_name:
+
+        # Esse parâmetro é obrigatório
         required: true
+
+        # Tipo do parâmetro (string)
         type: string
+
+      # Diretório que será usado como contexto do Docker build
       context_dir:
+
+        # Esse parâmetro não é obrigatório
         required: false
+
+        # Tipo string
         type: string
+
+        # Valor padrão caso nada seja enviado
+        # "." significa a raiz do repositório
         default: .
 
+# Define os jobs que serão executados
 jobs:
+
+  # Nome do job responsável por criar a imagem Docker
   docker-build:
+
+    # Define o sistema operacional da máquina virtual que executará o job
     runs-on: ubuntu-latest
 
+    # Lista de passos que serão executados dentro do job
     steps:
+
+      # Primeiro passo: baixar o código do repositório que chamou o workflow
       - name: Checkout do código
+
+        # Action oficial do GitHub para fazer checkout do repositório
         uses: actions/checkout@v4
 
+      # Segundo passo: construir a imagem Docker
       - name: Build da imagem Docker
+
+        # Executa o comando docker build
         run: docker build -t ${{ inputs.image_name }}:${{ github.sha }} ${{ inputs.context_dir }}
+        # -t define o nome e a tag da imagem Docker
+        # ${{ inputs.image_name }} é o nome da imagem enviado pelo workflow principal
+        # ${{ github.sha }} usa o hash do commit atual como tag da imagem
+        # Isso ajuda a versionar as imagens automaticamente
+        # ${{ inputs.context_dir }} define qual pasta será usada como contexto para o Docker build
