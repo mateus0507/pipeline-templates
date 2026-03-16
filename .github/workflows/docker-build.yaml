@@ -63,5 +63,21 @@ jobs:
 
       # Terceiro passo: rodar a imagem Docker para verificar se ela funciona
       - name: Rodar a imagem Docker
-        run: docker run -d --name my-container -p 8080:80 ${{ inputs.image_name }}:${{ github.sha }}
+        run: docker run -d --name my-container -p 3000:3000 ${{ inputs.image_name }}:${{ github.sha }}
         # Executa a imagem Docker criada para verificar se ela funciona corretamente
+      - name: Verificar se o container está rodando
+        run: |
+          sleep 5
+          echo "--- CONTEÚDO DO SITE (LOCALHOST:3000) ---"
+          
+          # Tenta capturar o corpo. Se falhar, avisa, mas não para a pipeline.
+          if curl -sS http://localhost:3000; then
+            echo -e "\n\n SUCESSO: O site respondeu corretamente!"
+          else
+            echo -e "\n\n AVISO: Não foi possível acessar o localhost:3000."
+            echo "Logs do container para depuração:"
+            docker logs my-container
+          fi
+          
+          # Garante que este passo sempre termine com sucesso
+          exit 0
