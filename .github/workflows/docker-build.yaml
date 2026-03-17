@@ -56,11 +56,8 @@ jobs:
           ref: main
           path: templates
 
-      # Segundo passo: construir a imagem Docker
       - name: Build da imagem Docker
-
-        # Executa o comando docker build
-        run: docker build -f templates/Dockerfile -t ${{ inputs.image_name }}:${{ github.sha }} app/${{ inputs.context_dir }}
+        run: docker build -f ${{ github.workspace }}/templates/Dockerfile -t ${{ inputs.image_name }}:${{ github.sha }} ${{ github.workspace }}/app/${{ inputs.context_dir }}
         # -t define o nome e a tag da imagem Docker
         # ${{ inputs.image_name }} é o nome da imagem enviado pelo workflow principal
         # ${{ github.sha }} usa o hash do commit atual como tag da imagem
