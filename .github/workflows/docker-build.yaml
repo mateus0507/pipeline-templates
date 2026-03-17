@@ -44,17 +44,23 @@ jobs:
     # Lista de passos que serão executados dentro do job
     steps:
 
-      # Primeiro passo: baixar o código do repositório que chamou o workflow
-      - name: Checkout do código
-
-        # Action oficial do GitHub para fazer checkout do repositório
+      - name: Checkout do código da aplicação
         uses: actions/checkout@v4
+        with:
+          path: app
+
+      - name: Checkout do repositório de templates
+        uses: actions/checkout@v4
+        with:
+          repository: mateus0507/pipeline-templates
+          ref: main
+          path: templates
 
       # Segundo passo: construir a imagem Docker
       - name: Build da imagem Docker
 
         # Executa o comando docker build
-        run: docker build -t ${{ inputs.image_name }}:${{ github.sha }} ${{ inputs.context_dir }}
+        run: docker build -f templates/Dockerfile -t ${{ inputs.image_name }}:${{ github.sha }} app/${{ inputs.context_dir }}
         # -t define o nome e a tag da imagem Docker
         # ${{ inputs.image_name }} é o nome da imagem enviado pelo workflow principal
         # ${{ github.sha }} usa o hash do commit atual como tag da imagem
@@ -67,7 +73,7 @@ jobs:
         # Executa a imagem Docker criada para verificar se ela funciona corretamente
       - name: Verificar se o container está rodando
         run: |
-          sleep 5
+          sleep 10
           echo "--- CONTEÚDO DO SITE (LOCALHOST:3000) ---"
           
           # Tenta capturar o corpo. Se falhar, avisa, mas não para a pipeline.
