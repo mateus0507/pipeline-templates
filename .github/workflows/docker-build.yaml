@@ -55,6 +55,7 @@ jobs:
           repository: mateus0507/pipeline-templates
           ref: main
           path: templates
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build da imagem Docker
         run: docker build -f ${{ github.workspace }}/templates/Dockerfile -t ${{ inputs.image_name }}:${{ github.sha }} ${{ github.workspace }}/app/${{ inputs.context_dir }}
