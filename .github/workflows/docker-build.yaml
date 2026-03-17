@@ -60,6 +60,12 @@ jobs:
       - name: Build da imagem Docker
         run: docker build -f ${{ github.workspace }}/templates/Dockerfile -t ${{ inputs.image_name }}:${{ github.sha }} ${{ github.workspace }}/app/${{ inputs.context_dir }}
         # -t define o nome e a tag da imagem Docker
+      - name: Verificar Dockerfile dos templates
+        run: |
+          echo "--- LISTANDO TEMPLATES ---"
+          ls -la templates
+          echo "--- CONTEÚDO DO DOCKERFILE ---"
+          cat templates/Dockerfile
         # ${{ inputs.image_name }} é o nome da imagem enviado pelo workflow principal
         # ${{ github.sha }} usa o hash do commit atual como tag da imagem
         # Isso ajuda a versionar as imagens automaticamente
