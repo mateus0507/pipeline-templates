@@ -1,5 +1,5 @@
 # Nome do workflow reutilizável
-# Esse template é responsável por realizar o build da aplicação REACT
+# Esse template é responsável por validar a aplicação REACT antes do build Docker
 name: React
 
 # Define quando esse workflow pode ser executado
@@ -11,7 +11,8 @@ on:
     # Define os parâmetros que podem ser recebidos do workflow que chamar este template
     inputs:
 
-      # Define a versão do Node.js que será usada no build
+      # Define a versão do Node.js que será usada no job
+      # Mantido por compatibilidade com o padrão dos outros templates
       node_version:
 
         # Esse parâmetro não é obrigatório
@@ -26,7 +27,7 @@ on:
 # Define os jobs que serão executados
 jobs:
 
-  # Nome do job responsável pelo build da aplicação
+  # Nome do job responsável por validar a aplicação
   build:
 
     # Define o sistema operacional do runner do GitHub Actions
@@ -43,6 +44,7 @@ jobs:
         uses: actions/checkout@v4
 
       # Segundo passo: configurar o ambiente Node.js
+      # Esse passo é mantido para seguir o padrão do template React
       - name: Configurar Node.js
 
         # Action oficial que instala a versão do Node.js desejada
@@ -52,18 +54,33 @@ jobs:
         with:
           node-version: ${{ inputs.node_version }}
 
-      # Terceiro passo: instalar as dependências do projeto
-      - name: Instalar dependências
+      # Terceiro passo: validar se o projeto possui package.json
+      # Isso garante que o repositório possui a estrutura mínima esperada
+      - name: Validar package.json
 
-        # Executa o comando npm install para baixar todas as dependências listadas no package.json
-        run: npm install
+        # Verifica se o arquivo package.json existe na raiz do projeto
+        run: |
+          if [ ! -f package.json ]; then
+            echo "package.json não encontrado na raiz do projeto."
+            exit 1
+          fi
 
-      # Quarto passo: gerar o build da aplicação
-      - name: Gerar build da aplicação
+      # Quarto passo: validar se o projeto parece ser React
+      # Essa checagem ajuda a garantir que o template correto foi chamado
+      - name: Validar projeto React
 
-        # Executa o script "build" definido no package.json
-        # No caso de projetos Next.js, normalmente roda "next build"
-        run: npm run build
+        # Procura pela dependência react dentro do package.json
+        run: |
+          if grep -q '"react"' package.json; then
+            echo "Projeto React identificado com sucesso."
+          else
+            echo "A dependência react não foi encontrada no package.json."
+            exit 1
+          fi
 
+      # Quinto passo: informar que o build da aplicação será feito no Dockerfile
+      # Nesse funil, npm install e npm run build não acontecem aqui
+      - name: Informar build via Docker
 
-        #usei o mesmo codigo do next para o react, so mudei o nome
+        # Apenas registra no log que a próxima etapa do funil será o docker-build
+        run: echo "Validação concluída. O build da aplicação será executado no Dockerfile, na etapa docker-build."
