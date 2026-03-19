@@ -63,7 +63,7 @@ jobs:
 
       # Terceiro passo: rodar a imagem Docker para verificar se ela funciona
       - name: Rodar a imagem Docker
-        run: docker run -d --name my-container -p 3000:3000 ${{ inputs.image_name }}:${{ github.sha }}
+        run: docker run -d --name my-container -p 3000:80 ${{ inputs.image_name }}:${{ github.sha }}
         # Executa a imagem Docker criada para verificar se ela funciona corretamente
       - name: Verificar se o container está rodando
         run: |
