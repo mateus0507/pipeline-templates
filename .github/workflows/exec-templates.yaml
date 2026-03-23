@@ -9,7 +9,7 @@ on:
         required: true # Obrigatório receber esse valor
         type: string   # Tipo do 
       VERSION: # Versão do Node.js a ser usada nos builds
-        required: true
+        required: false
         type: string
         default: "22"
 
