@@ -20,8 +20,6 @@ on:
         # Tipo do parâmetro
         type: string
 
-        # Valor padrão caso nada seja enviado pelo workflow que chamou
-        default: "20"
 
 # Define os jobs que serão executados
 jobs:
