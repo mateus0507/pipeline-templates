@@ -53,3 +53,4 @@ jobs:
     with:
       image_name: react-app
       context_dir: .
+      #é pra rodar na versão 22
