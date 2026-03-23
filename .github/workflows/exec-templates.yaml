@@ -1,27 +1,30 @@
+# Nome do workflow reutilizável
 name: executador-de-templates
 
+# Permite que esse workflow seja chamado por outro workflow
 on:
   workflow_call:
-    inputs:
-      STACK_TYPE:
-        required: true
-        type: string
+    inputs: # Define os inputs que esse workflow espera receber
+      STACK_TYPE: # Tipo da aplicação (next ou react)
+        required: true # Obrigatório receber esse valor
+        type: string   # Tipo do input
 
 jobs:
 
-  # Primeiro job: verificar se a branch atual está sincronizada com a main
+  #  Job 1: verifica se a branch está sincronizada com a main
   check-sync:
+    # Chama outro workflow reutilizável (template)
     uses: mateus0507/pipeline-templates/.github/workflows/check-main-sync.yaml@main
 
-  # Build Next.js (executa apenas se STACK_TYPE = next)
+  #  Job 2: build do Next.js (só roda se STACK_TYPE = next)
   next-build:
-    needs: [check-sync]
-    if: ${{ inputs.STACK_TYPE == 'next' }}
+    needs: [check-sync] # Só executa depois do check-sync
+    if: ${{ inputs.STACK_TYPE == 'next' }} # Condição baseada no input recebido
     uses: mateus0507/pipeline-templates/.github/workflows/next-build.yaml@main
     with:
-      node_version: "20"
+      node_version: "20" # Parâmetro enviado para o template
 
-  # Build React (executa apenas se STACK_TYPE = react)
+  #  Job 3: build do React (só roda se STACK_TYPE = react)
   react-build:
     needs: [check-sync]
     if: ${{ inputs.STACK_TYPE == 'react' }}
@@ -29,16 +32,16 @@ jobs:
     with:
       node_version: "20"
 
-  # Docker build Next.js
+  #  Job 4: build Docker para Next.js
   docker-build-next:
-    needs: [next-build]
+    needs: [next-build] # Só roda se o build do Next terminar
     if: ${{ inputs.STACK_TYPE == 'next' }}
     uses: mateus0507/pipeline-templates/.github/workflows/docker-build.yaml@main
     with:
-      image_name: next-app
-      context_dir: .
+      image_name: next-app # Nome da imagem Docker
+      context_dir: .       # Diretório base do build (raiz do projeto)
 
-  # Docker build React
+  #  Job 5: build Docker para React
   docker-build-react:
     needs: [react-build]
     if: ${{ inputs.STACK_TYPE == 'react' }}
