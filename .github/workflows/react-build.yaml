@@ -21,7 +21,6 @@ on:
         type: string
 
         # Valor padrão caso nada seja enviado pelo workflow que chamou
-        default: "22"
 
 # Define os jobs que serão executados
 jobs:
