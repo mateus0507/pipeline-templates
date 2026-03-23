@@ -1,0 +1,48 @@
+name: executador-de-templates
+
+on:
+  workflow_call:
+    inputs:
+      STACK_TYPE:
+        required: true
+        type: string
+
+jobs:
+
+  # Primeiro job: verificar se a branch atual está sincronizada com a main
+  check-sync:
+    uses: mateus0507/pipeline-templates/.github/workflows/check-main-sync.yaml@main
+
+  # Build Next.js (executa apenas se STACK_TYPE = next)
+  next-build:
+    needs: [check-sync]
+    if: ${{ inputs.STACK_TYPE == 'next' }}
+    uses: mateus0507/pipeline-templates/.github/workflows/next-build.yaml@main
+    with:
+      node_version: "20"
+
+  # Build React (executa apenas se STACK_TYPE = react)
+  react-build:
+    needs: [check-sync]
+    if: ${{ inputs.STACK_TYPE == 'react' }}
+    uses: mateus0507/pipeline-templates/.github/workflows/react-build.yaml@main
+    with:
+      node_version: "20"
+
+  # Docker build Next.js
+  docker-build-next:
+    needs: [next-build]
+    if: ${{ inputs.STACK_TYPE == 'next' }}
+    uses: mateus0507/pipeline-templates/.github/workflows/docker-build.yaml@main
+    with:
+      image_name: next-app
+      context_dir: .
+
+  # Docker build React
+  docker-build-react:
+    needs: [react-build]
+    if: ${{ inputs.STACK_TYPE == 'react' }}
+    uses: mateus0507/pipeline-templates/.github/workflows/docker-build.yaml@main
+    with:
+      image_name: react-app
+      context_dir: .
