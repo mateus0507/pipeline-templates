@@ -7,7 +7,10 @@ on:
     inputs: # Define os inputs que esse workflow espera receber
       STACK_TYPE: # Tipo da aplicação (next ou react)
         required: true # Obrigatório receber esse valor
-        type: string   # Tipo do input
+        type: string   # Tipo do 
+      VERSION: # Versão do Node.js a ser usada nos builds
+        required: true
+        type: string
 
 jobs:
 
