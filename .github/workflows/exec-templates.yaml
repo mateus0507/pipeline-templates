@@ -11,7 +11,6 @@ on:
       VERSION: # Versão do Node.js a ser usada nos builds
         required: false
         type: string
-        default: "22"
 
 jobs:
 
@@ -26,7 +25,7 @@ jobs:
     if: ${{ inputs.STACK_TYPE == 'next' }} # Condição baseada no input recebido
     uses: mateus0507/pipeline-templates/.github/workflows/next-build.yaml@main
     with:
-      node_version: ${{ inputs.VERSION }} # Parâmetro enviado para o template
+      node_version: ${{ inputs.VERSION || '22' }} # Parâmetro enviado para o template
 
   #  Job 3: build do React (só roda se STACK_TYPE = react)
   react-build:
@@ -34,7 +33,7 @@ jobs:
     if: ${{ inputs.STACK_TYPE == 'react' }}
     uses: mateus0507/pipeline-templates/.github/workflows/react-build.yaml@main
     with:
-      node_version: ${{ inputs.VERSION }}
+      node_version: ${{ inputs.VERSION || '22' }}
 
   #  Job 4: build Docker para Next.js
   docker-build-next:
