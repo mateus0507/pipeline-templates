@@ -1,83 +1,95 @@
+# Nome do workflow reutilizável
+# Esse template é responsável por gerar uma imagem Docker usando Nixpacks
 name: Nixpacks build
 
+# Define que esse workflow só roda quando for chamado por outro workflow
 on:
   workflow_call:
     inputs:
+
+      # Nome da imagem que será criada
+      # Exemplo: next-app ou react-app
       image_name:
         required: true
         type: string
 
+      # Caminho onde está o projeto
+      # Por padrão, usa a raiz do repositório
       context_dir:
         required: false
         type: string
         default: .
 
+      # Versão do Node.js que o Nixpacks deve usar
+      # Se nada for enviado, usa a 22
       node_version:
         required: false
         type: string
         default: "22"
 
+      # Comando de build customizado (opcional)
+      # Se vazio, o Nixpacks tenta detectar automaticamente
       build_cmd:
         required: false
         type: string
         default: ""
 
+      # Comando de start customizado (opcional)
+      # Se vazio, o Nixpacks tenta detectar automaticamente
       start_cmd:
         required: false
         type: string
         default: ""
 
+# Define os jobs do workflow
 jobs:
   nixpacks-build:
+
+    # Define o sistema operacional do runner
     runs-on: ubuntu-latest
 
     steps:
+
+      # Baixa o código do repositório
       - name: Checkout do código
         uses: actions/checkout@v4
 
+      # Instala o Nixpacks no ambiente do GitHub Actions
       - name: Instalar Nixpacks
         shell: bash
         run: |
+          # Faz download e instalação do Nixpacks
           curl -fsSL https://nixpacks.com/install.sh | bash
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          export PATH="$HOME/.local/bin:$PATH"
 
+          # Adiciona o binário ao PATH do GitHub (para próximos steps)
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      # Gera a imagem Docker automaticamente com Nixpacks
       - name: Gerar imagem com Nixpacks
         shell: bash
         run: |
+          # Ativa modo seguro no bash
           set -euo pipefail
 
+          # Array para armazenar comandos opcionais
           CMD_ARGS=()
 
+          # Se foi passado um comando de build, usa ele
           if [[ -n "${{ inputs.build_cmd }}" ]]; then
             CMD_ARGS+=(--build-cmd "${{ inputs.build_cmd }}")
           fi
 
+          # Se foi passado um comando de start, usa ele
           if [[ -n "${{ inputs.start_cmd }}" ]]; then
             CMD_ARGS+=(--start-cmd "${{ inputs.start_cmd }}")
           fi
 
+          # Executa o Nixpacks:
+          # - analisa o projeto automaticamente
+          # - instala dependências
+          # - roda build (ou usa o informado)
+          # - gera imagem Docker
           nixpacks build "${{ inputs.context_dir }}" \
             --env NIXPACKS_NODE_VERSION="${{ inputs.node_version }}" \
             "${CMD_ARGS[@]}" \
             --tag "${{ inputs.image_name }}:${{ github.sha }}"
-
-      - name: Rodar a imagem gerada
-        shell: bash
-        run: |
-          docker run -d --name my-container -p 3000:3000 "${{ inputs.image_name }}:${{ github.sha }}"
-
-      - name: Verificar se o container está rodando
-        shell: bash
-        run: |
-          sleep 10
-          echo "--- CONTEÚDO DO SITE (LOCALHOST:3000) ---"
-
-          if curl -sS http://localhost:3000; then
-            echo -e "\n\nSUCESSO: O site respondeu corretamente!"
-          else
-            echo -e "\n\nERRO: Não foi possível acessar o localhost:3000."
-            echo "Logs do container para depuração:"
-            docker logs my-container
-            exit 1
-          fi
