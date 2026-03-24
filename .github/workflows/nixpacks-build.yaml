@@ -1,0 +1,83 @@
+name: Nixpacks build
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        required: true
+        type: string
+
+      context_dir:
+        required: false
+        type: string
+        default: .
+
+      node_version:
+        required: false
+        type: string
+        default: "22"
+
+      build_cmd:
+        required: false
+        type: string
+        default: ""
+
+      start_cmd:
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  nixpacks-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Instalar Nixpacks
+        shell: bash
+        run: |
+          curl -fsSL https://nixpacks.com/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.local/bin:$PATH"
+
+      - name: Gerar imagem com Nixpacks
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CMD_ARGS=()
+
+          if [[ -n "${{ inputs.build_cmd }}" ]]; then
+            CMD_ARGS+=(--build-cmd "${{ inputs.build_cmd }}")
+          fi
+
+          if [[ -n "${{ inputs.start_cmd }}" ]]; then
+            CMD_ARGS+=(--start-cmd "${{ inputs.start_cmd }}")
+          fi
+
+          nixpacks build "${{ inputs.context_dir }}" \
+            --env NIXPACKS_NODE_VERSION="${{ inputs.node_version }}" \
+            "${CMD_ARGS[@]}" \
+            --tag "${{ inputs.image_name }}:${{ github.sha }}"
+
+      - name: Rodar a imagem gerada
+        shell: bash
+        run: |
+          docker run -d --name my-container -p 3000:3000 "${{ inputs.image_name }}:${{ github.sha }}"
+
+      - name: Verificar se o container está rodando
+        shell: bash
+        run: |
+          sleep 10
+          echo "--- CONTEÚDO DO SITE (LOCALHOST:3000) ---"
+
+          if curl -sS http://localhost:3000; then
+            echo -e "\n\nSUCESSO: O site respondeu corretamente!"
+          else
+            echo -e "\n\nERRO: Não foi possível acessar o localhost:3000."
+            echo "Logs do container para depuração:"
+            docker logs my-container
+            exit 1
+          fi

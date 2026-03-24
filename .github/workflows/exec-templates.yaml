@@ -39,7 +39,7 @@ jobs:
   docker-build-next:
     needs: [next-build] # Só roda se o build do Next terminar
     if: ${{ inputs.STACK_TYPE == 'next' }}
-    uses: mateus0507/pipeline-templates/.github/workflows/docker-build.yaml@main
+    uses: mateus0507/pipeline-templates/.github/workflows/nixpacks-build.yaml@main
     with:
       image_name: next-app # Nome da imagem Docker
       context_dir: .       # Diretório base do build (raiz do projeto)
@@ -48,7 +48,7 @@ jobs:
   docker-build-react:
     needs: [react-build]
     if: ${{ inputs.STACK_TYPE == 'react' }}
-    uses: mateus0507/pipeline-templates/.github/workflows/docker-build.yaml@main
+    uses: mateus0507/pipeline-templates/.github/workflows/nixpacks-build.yaml@main
     with:
       image_name: react-app
       context_dir: .
