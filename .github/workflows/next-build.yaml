@@ -13,10 +13,8 @@ on:
 
       # Define a versão do Node.js que será usada no build
       node_version:
-
         # Esse parâmetro não é obrigatório
         required: false
-
         # Tipo do parâmetro
         type: string
 

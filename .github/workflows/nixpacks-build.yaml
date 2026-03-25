@@ -10,7 +10,7 @@ on:
       # Nome da imagem que será criada
       # Exemplo: next-app ou react-app
       image_name:
-        required: true
+        required: false
         type: string
 
       # Caminho onde está o projeto
