@@ -35,6 +35,10 @@ jobs:
 
     steps:
 
+      # Baixa o código do repositório
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
       # Instala o Nixpacks no ambiente do GitHub Actions
       - name: Instalar Nixpacks
         shell: bash
