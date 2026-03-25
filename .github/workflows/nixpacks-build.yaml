@@ -57,10 +57,6 @@ jobs:
           # Ativa modo seguro no bash
           set -euo pipefail
 
-          # Array para armazenar comandos opcionais
-          CMD_ARGS=()
-
-
           # Executa o Nixpacks:
           # - analisa o projeto automaticamente
           # - instala dependências
@@ -68,5 +64,4 @@ jobs:
           # - gera imagem Docker
           nixpacks build "${{ inputs.context_dir }}" \
             --env NIXPACKS_NODE_VERSION="${{ inputs.version }}" \
-            "${CMD_ARGS[@]}" \
             --tag "${{ inputs.image_name }}:${{ github.sha }}"
