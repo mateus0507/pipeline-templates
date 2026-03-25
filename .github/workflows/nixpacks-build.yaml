@@ -22,24 +22,10 @@ on:
 
       # Versão do Node.js que o Nixpacks deve usar
       # Se nada for enviado, usa a 22
-      VERSION:
+      version:
         required: false
         type: string
         default: "22"
-
-      # Comando de build customizado (opcional)
-      # Se vazio, o Nixpacks tenta detectar automaticamente
-      # build_cmd:
-      #   required: false
-      #   type: string
-      #   default: ""
-
-      # # Comando de start customizado (opcional)
-      # # Se vazio, o Nixpacks tenta detectar automaticamente
-      # start_cmd:
-      #   required: false
-      #   type: string
-      #   default: ""
 
 # Define os jobs do workflow
 jobs:
@@ -81,17 +67,6 @@ jobs:
           # - roda build (ou usa o informado)
           # - gera imagem Docker
           nixpacks build "${{ inputs.context_dir }}" \
-            --env NIXPACKS_NODE_VERSION="${{ inputs.VERSION }}" \
+            --env NIXPACKS_NODE_VERSION="${{ inputs.version }}" \
             "${CMD_ARGS[@]}" \
             --tag "${{ inputs.image_name }}:${{ github.sha }}"
-
-  
-  # # Se foi passado um comando de build, usa ele
-  # if [[ -n "${{ inputs.build_cmd }}" ]]; then
-  #   CMD_ARGS+=(--build-cmd "${{ inputs.build_cmd }}")
-  # fi
-
-  # # Se foi passado um comando de start, usa ele
-  # if [[ -n "${{ inputs.start_cmd }}" ]]; then
-  #   CMD_ARGS+=(--start-cmd "${{ inputs.start_cmd }}")
-  # fi
