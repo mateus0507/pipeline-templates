@@ -25,7 +25,6 @@ on:
       version:
         required: false
         type: string
-        default: "22"
 
 # Define os jobs do workflow
 jobs:
