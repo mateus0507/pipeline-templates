@@ -22,24 +22,24 @@ on:
 
       # Versão do Node.js que o Nixpacks deve usar
       # Se nada for enviado, usa a 22
-      node_version:
+      VERSION:
         required: false
         type: string
         default: "22"
 
       # Comando de build customizado (opcional)
       # Se vazio, o Nixpacks tenta detectar automaticamente
-      build_cmd:
-        required: false
-        type: string
-        default: ""
+      # build_cmd:
+      #   required: false
+      #   type: string
+      #   default: ""
 
-      # Comando de start customizado (opcional)
-      # Se vazio, o Nixpacks tenta detectar automaticamente
-      start_cmd:
-        required: false
-        type: string
-        default: ""
+      # # Comando de start customizado (opcional)
+      # # Se vazio, o Nixpacks tenta detectar automaticamente
+      # start_cmd:
+      #   required: false
+      #   type: string
+      #   default: ""
 
 # Define os jobs do workflow
 jobs:
@@ -74,15 +74,6 @@ jobs:
           # Array para armazenar comandos opcionais
           CMD_ARGS=()
 
-          # Se foi passado um comando de build, usa ele
-          if [[ -n "${{ inputs.build_cmd }}" ]]; then
-            CMD_ARGS+=(--build-cmd "${{ inputs.build_cmd }}")
-          fi
-
-          # Se foi passado um comando de start, usa ele
-          if [[ -n "${{ inputs.start_cmd }}" ]]; then
-            CMD_ARGS+=(--start-cmd "${{ inputs.start_cmd }}")
-          fi
 
           # Executa o Nixpacks:
           # - analisa o projeto automaticamente
@@ -90,6 +81,17 @@ jobs:
           # - roda build (ou usa o informado)
           # - gera imagem Docker
           nixpacks build "${{ inputs.context_dir }}" \
-            --env NIXPACKS_NODE_VERSION="${{ inputs.node_version }}" \
+            --env NIXPACKS_NODE_VERSION="${{ inputs.VERSION }}" \
             "${CMD_ARGS[@]}" \
             --tag "${{ inputs.image_name }}:${{ github.sha }}"
+
+  
+  # # Se foi passado um comando de build, usa ele
+  # if [[ -n "${{ inputs.build_cmd }}" ]]; then
+  #   CMD_ARGS+=(--build-cmd "${{ inputs.build_cmd }}")
+  # fi
+
+  # # Se foi passado um comando de start, usa ele
+  # if [[ -n "${{ inputs.start_cmd }}" ]]; then
+  #   CMD_ARGS+=(--start-cmd "${{ inputs.start_cmd }}")
+  # fi
