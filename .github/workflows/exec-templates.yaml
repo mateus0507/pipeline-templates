@@ -11,6 +11,11 @@ on:
       version: # Versão do Node.js a ser usada nos builds
         required: false
         type: string
+    secrets: 
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
 
 jobs:
 
@@ -40,16 +45,24 @@ jobs:
     needs: [next-build] # Só roda se o build do Next terminar
     if: ${{ inputs.STACK_TYPE == 'next' }}
     uses: mateus0507/pipeline-templates/.github/workflows/nixpacks-build.yaml@main
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       image_name: next-app # Nome da imagem Docker
       context_dir: .       # Diretório base do build (raiz do projeto)
+      version: ${{ inputs.version || '22' }}
 
   #  Job 5: build Docker para React
   docker-build-react:
     needs: [react-build]
     if: ${{ inputs.STACK_TYPE == 'react' }}
     uses: mateus0507/pipeline-templates/.github/workflows/nixpacks-build.yaml@main
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       image_name: react-app
       context_dir: .
       #é pra rodar na versão 22
+      version: ${{ inputs.version || '22' }}

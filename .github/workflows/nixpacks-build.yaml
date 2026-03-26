@@ -26,6 +26,12 @@ on:
         required: false
         type: string
 
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+
 # Define os jobs do workflow
 jobs:
   nixpacks-build:
@@ -49,6 +55,13 @@ jobs:
           # Adiciona o binário ao PATH do GitHub (para próximos steps)
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      # Faz login no Docker Hub usando os secrets recebidos
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       # Gera a imagem Docker automaticamente com Nixpacks
       - name: Gerar imagem com Nixpacks
         shell: bash
@@ -63,4 +76,14 @@ jobs:
           # - gera imagem Docker
           nixpacks build "${{ inputs.context_dir }}" \
             --env NIXPACKS_NODE_VERSION="${{ inputs.version }}" \
-            --tag "${{ inputs.image_name }}:${{ github.sha }}"
+            --tag "${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}:${{ github.sha }}"
+
+      # Envia a imagem gerada para o Docker Hub
+      - name: Push da imagem para o Docker Hub
+        shell: bash
+        run: |
+          # Ativa modo seguro no bash
+          set -euo pipefail
+
+          # Envia a imagem para o repositório do Docker Hub
+          docker push "${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}:${{ github.sha }}"
