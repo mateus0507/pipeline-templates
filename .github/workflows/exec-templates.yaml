@@ -43,6 +43,7 @@ jobs:
     with:
       image_name: next-app # Nome da imagem Docker
       context_dir: .       # Diretório base do build (raiz do projeto)
+    secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -55,5 +56,6 @@ jobs:
       image_name: react-app
       context_dir: .
       #é pra rodar na versão 22
+    secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
