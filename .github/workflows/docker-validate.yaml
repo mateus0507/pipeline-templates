@@ -1,0 +1,56 @@
+name: Docker Validate
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        required: true
+        type: string
+      tag:
+        required: true
+        type: string
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Pull da imagem
+        run: |
+          docker pull "${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}:${{ inputs.tag }}"
+
+      - name: Rodar container
+        run: |
+          docker run -d \
+            --name teste-container \
+            -p 3000:3000 \
+            "${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}:${{ inputs.tag }}"
+
+          sleep 15
+
+      - name: Validar container
+        run: |
+          if [ "$(docker inspect -f '{{.State.Running}}' teste-container)" != "true" ]; then
+            echo "Erro ao subir container"
+            docker logs teste-container || true
+            exit 1
+          fi
+
+          echo "Container rodando com sucesso"
+
+      - name: Limpar container
+        if: always()
+        run: |
+          docker stop teste-container || true
+          docker rm teste-container || true
