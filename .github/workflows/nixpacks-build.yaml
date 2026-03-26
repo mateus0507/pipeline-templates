@@ -2,65 +2,61 @@
 # Esse template é responsável por gerar uma imagem Docker usando Nixpacks
 name: Nixpacks build
 
-# Define que esse workflow só roda quando for chamado por outro workflow
 on:
   workflow_call:
     inputs:
 
-      # Nome da imagem que será criada
-      # Exemplo: next-app ou react-app
       image_name:
         required: false
         type: string
 
-      # Caminho onde está o projeto
-      # Por padrão, usa a raiz do repositório
       context_dir:
         required: false
         type: string
         default: .
 
-      # Versão do Node.js que o Nixpacks deve usar
-      # Se nada for enviado, usa a 22
       version:
         required: false
         type: string
 
-# Define os jobs do workflow
 jobs:
   nixpacks-build:
 
-    # Define o sistema operacional do runner
     runs-on: ubuntu-latest
 
     steps:
 
-      # Baixa o código do repositório
       - name: Checkout do código
         uses: actions/checkout@v4
 
-      # Instala o Nixpacks no ambiente do GitHub Actions
       - name: Instalar Nixpacks
         shell: bash
         run: |
-          # Faz download e instalação do Nixpacks
           curl -fsSL https://nixpacks.com/install.sh | bash
-
-          # Adiciona o binário ao PATH do GitHub (para próximos steps)
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      # Gera a imagem Docker automaticamente com Nixpacks
       - name: Gerar imagem com Nixpacks
         shell: bash
         run: |
-          # Ativa modo seguro no bash
           set -euo pipefail
 
-          # Executa o Nixpacks:
-          # - analisa o projeto automaticamente
-          # - instala dependências
-          # - roda build (ou usa o informado)
-          # - gera imagem Docker
           nixpacks build "${{ inputs.context_dir }}" \
             --env NIXPACKS_NODE_VERSION="${{ inputs.version }}" \
             --tag "${{ inputs.image_name }}:${{ github.sha }}"
+
+      # 👇 NOVO: login no Docker Hub
+      - name: Login no Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      # 👇 NOVO: tag da imagem no formato do Docker Hub
+      - name: Tag da imagem
+        run: |
+          docker tag \
+          ${{ inputs.image_name }}:${{ github.sha }} \
+          ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}:${{ github.sha }}
+
+      # 👇 NOVO: envio da imagem
+      - name: Push da imagem
+        run: |
+          docker push \
+          ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}:${{ github.sha }}
