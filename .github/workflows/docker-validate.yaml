@@ -75,7 +75,7 @@ jobs:
             exit 1
           fi
 
-          echo "Aplicação respondeu corretamente "
+          echo "Aplicação respondeu corretamente  "
 
       # Sempre executa (mesmo se der erro antes)
       # Responsável por parar e remover o container de teste

@@ -25,50 +25,26 @@ jobs:
     uses: mateus0507/pipeline-templates/.github/workflows/check-main-sync.yaml@main
 
   #  Job 4: build Docker para Next.js
-  docker-build-next:
+  docker-build:
     needs: [check-sync] # Só roda se o build do Next terminar
-    if: ${{ inputs.STACK_TYPE == 'next' }}
+    if: ${{ inputs.STACK_TYPE == 'next' || inputs.STACK_TYPE == 'react' }}
     uses: mateus0507/pipeline-templates/.github/workflows/nixpacks-build.yaml@main
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
-      image_name: next-app # Nome da imagem Docker
+      image_name: ${{ inputs.STACK_TYPE }}-app # Nome da imagem Docker
       context_dir: .       # Diretório base do build (raiz do projeto)
       version: ${{ inputs.version || '22' }}
 
-  #  Job 5: build Docker para React
-  docker-build-react:
-    needs: [check-sync]
-    if: ${{ inputs.STACK_TYPE == 'react' }}
-    uses: mateus0507/pipeline-templates/.github/workflows/nixpacks-build.yaml@main
-    secrets:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-    with:
-      image_name: react-app
-      context_dir: .
-      #é pra rodar na versão 22
-      version: ${{ inputs.version || '22' }}
-
   docker-validate-next:
-    needs: [docker-build-next]
-    if: ${{ inputs.STACK_TYPE == 'next' }}
+    needs: [docker-build]
+    if: ${{ inputs.STACK_TYPE == 'next' || inputs.STACK_TYPE == 'react' }}
     uses: mateus0507/pipeline-templates/.github/workflows/docker-validate.yaml@main
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
-      image_name: next-app
+      image_name: ${{ inputs.STACK_TYPE }}-app
       tag: ${{ github.sha }}
 
-  docker-validate-react:
-    needs: [docker-build-react]
-    if: ${{ inputs.STACK_TYPE == 'react' }}
-    uses: mateus0507/pipeline-templates/.github/workflows/docker-validate.yaml@main
-    secrets:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-    with:
-      image_name: react-app
-      tag: ${{ github.sha }}
