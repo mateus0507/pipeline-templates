@@ -62,6 +62,21 @@ jobs:
           # Caso esteja rodando, imprime mensagem de sucesso
           echo "Container rodando com sucesso"
 
+          echo "Testando aplicação com curl..."
+
+          response=$(curl -s -o /dev/stderr -w "%{http_code}" http://localhost:3000)
+
+          echo ""
+          echo "Status HTTP: $response"
+
+          if [ "$response" -ne 200 ]; then
+            echo "Erro: aplicação não respondeu com 200"
+            docker logs teste-container || true
+            exit 1
+          fi
+
+          echo "Aplicação respondeu corretamente "
+
       # Sempre executa (mesmo se der erro antes)
       # Responsável por parar e remover o container de teste
       - name: Limpar container
