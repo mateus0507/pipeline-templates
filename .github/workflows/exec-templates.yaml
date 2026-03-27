@@ -24,25 +24,25 @@ jobs:
     # Chama outro workflow reutilizável (template)
     uses: mateus0507/pipeline-templates/.github/workflows/check-main-sync.yaml@main
 
-  #  Job 2: build do Next.js (só roda se STACK_TYPE = next)
-  next-build:
-    needs: [check-sync] # Só executa depois do check-sync
-    if: ${{ inputs.STACK_TYPE == 'next' }} # Condição baseada no input recebido
-    uses: mateus0507/pipeline-templates/.github/workflows/next-build.yaml@main
-    with:
-      node_version: ${{ inputs.version || '22' }} # Parâmetro enviado para o template
+  # #  Job 2: build do Next.js (só roda se STACK_TYPE = next)
+  # next-build:
+  #   needs: [check-sync] # Só executa depois do check-sync
+  #   if: ${{ inputs.STACK_TYPE == 'next' }} # Condição baseada no input recebido
+  #   uses: mateus0507/pipeline-templates/.github/workflows/next-build.yaml@main
+  #   with:
+  #     node_version: ${{ inputs.version || '22' }} # Parâmetro enviado para o template
 
-  #  Job 3: build do React (só roda se STACK_TYPE = react)
-  react-build:
-    needs: [check-sync]
-    if: ${{ inputs.STACK_TYPE == 'react' }}
-    uses: mateus0507/pipeline-templates/.github/workflows/react-build.yaml@main
-    with:
-      node_version: ${{ inputs.version || '22' }}
+  # #  Job 3: build do React (só roda se STACK_TYPE = react)
+  # react-build:
+  #   needs: [check-sync]
+  #   if: ${{ inputs.STACK_TYPE == 'react' }}
+  #   uses: mateus0507/pipeline-templates/.github/workflows/react-build.yaml@main
+  #   with:
+  #     node_version: ${{ inputs.version || '22' }}
 
   #  Job 4: build Docker para Next.js
   docker-build-next:
-    needs: [next-build] # Só roda se o build do Next terminar
+    needs: [check-sync] # Só roda se o build do Next terminar
     if: ${{ inputs.STACK_TYPE == 'next' }}
     uses: mateus0507/pipeline-templates/.github/workflows/nixpacks-build.yaml@main
     secrets:
@@ -55,7 +55,7 @@ jobs:
 
   #  Job 5: build Docker para React
   docker-build-react:
-    needs: [react-build]
+    needs: [check-sync]
     if: ${{ inputs.STACK_TYPE == 'react' }}
     uses: mateus0507/pipeline-templates/.github/workflows/nixpacks-build.yaml@main
     secrets:
