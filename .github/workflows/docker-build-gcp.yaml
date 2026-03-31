@@ -1,0 +1,66 @@
+# Nome do template
+name: Build e Push para GCP
+
+# Permite que esse workflow seja chamado por outro
+on:
+  workflow_call:
+
+    # Inputs obrigatórios (somente o essencial)
+    inputs:
+      image_name:
+        required: true
+        type: string
+
+      project_id:
+        required: true
+        type: string
+
+      region:
+        required: true
+        type: string
+
+      repository:
+        required: true
+        type: string
+
+    # Secret necessário para autenticar no Google Cloud
+    secrets:
+      GCP_CREDENTIALS:
+        required: true
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Baixa o código do repositório que chamou esse template
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      # 2️⃣ Faz login no Google Cloud usando a credencial (JSON)
+      - name: Autenticar no GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      # 3️⃣ Instala o CLI do Google (gcloud)
+      - name: Instalar gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      # 4️⃣ Permite que o Docker envie imagens para o Artifact Registry
+      - name: Configurar Docker para o GCP
+        run: |
+          gcloud auth configure-docker ${{ inputs.region }}-docker.pkg.dev --quiet
+
+      # 5️⃣ Build da imagem usando o Dockerfile do repositório chamador
+      - name: Build da imagem
+        run: |
+          docker build \
+            -t ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/${{ inputs.repository }}/${{ inputs.image_name }}:${{ github.sha }} \
+            .
+
+      # 6️⃣ Envia a imagem para o Google (Artifact Registry)
+      - name: Push da imagem
+        run: |
+          docker push \
+            ${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/${{ inputs.repository }}/${{ inputs.image_name }}:${{ github.sha }}
