@@ -40,7 +40,7 @@ jobs:
   docker-builder-gcp:
     needs: [check-sync]
     # Aqui ele chama o seu template reutilizável
-    uses: seu-usuario/seu-repo-templates/.github/workflows/docker-build-gcp.yaml@main
+    uses: mateus0507/pipeline-templates/.github/workflows/docker-build-gcp.yaml@main
 
     # Passa os dados necessários (inputs)
     with:
