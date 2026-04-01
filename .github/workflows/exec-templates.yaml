@@ -39,17 +39,14 @@ jobs:
 
   docker-builder-gcp:
     needs: [check-sync]
-    # Aqui ele chama o seu template reutilizável
     uses: mateus0507/pipeline-templates/.github/workflows/docker-build-gcp.yaml@main
 
-    # Passa os dados necessários (inputs)
     with:
       image_name: minha-app
       project_id: meu-projeto-gcp
       region: us-central1
       repository: minhas-imagens
 
-    # Passa a credencial (secret)
     secrets:
       GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
 
