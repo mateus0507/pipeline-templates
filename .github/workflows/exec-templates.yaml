@@ -34,7 +34,7 @@ jobs:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       image_name: ${{ inputs.STACK_TYPE }}-app # Nome da imagem Docker
-      context_dir: ./app-next    # Diretório base do build (raiz do projeto)
+      context_dir: .    # Diretório base do build (raiz do projeto)
       version: ${{ inputs.version || '22' }}
 
   # docker-builder-gcp:
