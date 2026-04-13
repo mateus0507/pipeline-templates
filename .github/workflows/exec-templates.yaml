@@ -46,6 +46,13 @@ jobs:
       container_name: minha-app
       manifests_path: ./k8s
 
+  validate-k8s:
+    needs: [deploy-k8s]
+    uses: mateus0507/pipeline-templates/.github/workflows/k8s-validate.yaml@main
+    with:
+      deployment_name: minha-app
+      namespace: default
+
   # docker-builder-gcp:
   #   needs: [check-sync]
   #   uses: mateus0507/pipeline-templates/.github/workflows/docker-build-gcp.yaml@main

@@ -1,0 +1,37 @@
+name: Validate Kubernetes
+
+on:
+  workflow_call:
+    inputs:
+      deployment_name:
+        required: true
+        type: string
+      namespace:
+        required: false
+        type: string
+        default: default
+
+jobs:
+  validate:
+    runs-on: self-hosted
+
+    steps:
+      - name: Verificar cluster
+        run: kubectl cluster-info
+
+      - name: Validar rollout do deployment
+        run: |
+          kubectl rollout status deployment/${{ inputs.deployment_name }} \
+          --namespace=${{ inputs.namespace }}
+
+      - name: Listar deployments
+        run: kubectl get deployments -n ${{ inputs.namespace }}
+
+      - name: Listar pods
+        run: kubectl get pods -n ${{ inputs.namespace }}
+
+      - name: Listar services
+        run: kubectl get svc -n ${{ inputs.namespace }}
+
+      - name: Descrever deployment
+        run: kubectl describe deployment ${{ inputs.deployment_name }} -n ${{ inputs.namespace }}
