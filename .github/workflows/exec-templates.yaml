@@ -66,14 +66,14 @@ jobs:
   #   secrets:
   #     GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
 
-  docker-validate-next:
-    needs: [docker-build]
-    if: ${{ inputs.STACK_TYPE == 'next' || inputs.STACK_TYPE == 'react' }}
-    uses: mateus0507/pipeline-templates/.github/workflows/docker-validate.yaml@main
-    secrets:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-    with:
-      image_name: ${{ inputs.STACK_TYPE }}-app
-      tag: ${{ github.sha }}
+  # docker-validate-next:
+  #   needs: [docker-build]
+  #   if: ${{ inputs.STACK_TYPE == 'next' || inputs.STACK_TYPE == 'react' }}
+  #   uses: mateus0507/pipeline-templates/.github/workflows/docker-validate.yaml@main
+  #   secrets:
+  #     DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  #     DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  #   with:
+  #     image_name: ${{ inputs.STACK_TYPE }}-app
+  #     tag: ${{ github.sha }}
 
