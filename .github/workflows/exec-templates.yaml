@@ -24,40 +24,40 @@ jobs:
     # Chama outro workflow reutilizável (template)
     uses: mateus0507/pipeline-templates/.github/workflows/check-main-sync.yaml@main
 
-  # #  Job 4: build Docker para Next.js
-  # docker-build:
-  #   needs: [check-sync] # Só roda se o build do Next terminar
-  #   if: ${{ inputs.STACK_TYPE == 'next' || inputs.STACK_TYPE == 'react' }}
-  #   uses: mateus0507/pipeline-templates/.github/workflows/nixpacks-build.yaml@main
-  #   secrets:
-  #     DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-  #     DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-  #   with:
-  #     image_name: ${{ inputs.STACK_TYPE }}-app # Nome da imagem Docker
-  #     context_dir: .       # Diretório base do build (raiz do projeto)
-  #     version: ${{ inputs.version || '22' }}
-
-  docker-builder-gcp:
-    needs: [check-sync]
-    uses: mateus0507/pipeline-templates/.github/workflows/docker-build-gcp.yaml@main
-
-    with:
-      image_name: minha-app
-      project_id: meu-projeto-gcp
-      region: us-central1
-      repository: minhas-imagens
-
+  #  Job 4: build Docker para Next.js
+  docker-build:
+    needs: [check-sync] # Só roda se o build do Next terminar
+    if: ${{ inputs.STACK_TYPE == 'next' || inputs.STACK_TYPE == 'react' }}
+    uses: mateus0507/pipeline-templates/.github/workflows/nixpacks-build.yaml@main
     secrets:
-      GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    with:
+      image_name: ${{ inputs.STACK_TYPE }}-app # Nome da imagem Docker
+      context_dir: .       # Diretório base do build (raiz do projeto)
+      version: ${{ inputs.version || '22' }}
 
-  # docker-validate-next:
-  #   needs: [docker-build]
-  #   if: ${{ inputs.STACK_TYPE == 'next' || inputs.STACK_TYPE == 'react' }}
-  #   uses: mateus0507/pipeline-templates/.github/workflows/docker-validate.yaml@main
-  #   secrets:
-  #     DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-  #     DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  # docker-builder-gcp:
+  #   needs: [check-sync]
+  #   uses: mateus0507/pipeline-templates/.github/workflows/docker-build-gcp.yaml@main
+
   #   with:
-  #     image_name: ${{ inputs.STACK_TYPE }}-app
-  #     tag: ${{ github.sha }}
+  #     image_name: minha-app
+  #     project_id: meu-projeto-gcp
+  #     region: us-central1
+  #     repository: minhas-imagens
+
+  #   secrets:
+  #     GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+
+  docker-validate-next:
+    needs: [docker-build]
+    if: ${{ inputs.STACK_TYPE == 'next' || inputs.STACK_TYPE == 'react' }}
+    uses: mateus0507/pipeline-templates/.github/workflows/docker-validate.yaml@main
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    with:
+      image_name: ${{ inputs.STACK_TYPE }}-app
+      tag: ${{ github.sha }}
 
