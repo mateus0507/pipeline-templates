@@ -37,6 +37,15 @@ jobs:
       context_dir: .    # Diretório base do build (raiz do projeto)
       version: ${{ inputs.version || '22' }}
 
+  deploy-k8s:
+    needs: [docker-build]
+    uses: mateus0507/pipeline-templates/.github/workflows/k8s-deploy.yaml@main
+    with:
+      image_name: mateussousa/minha-app:1
+      deployment_name: minha-app
+      container_name: minha-app
+      manifests_path: ./k8s
+
   # docker-builder-gcp:
   #   needs: [check-sync]
   #   uses: mateus0507/pipeline-templates/.github/workflows/docker-build-gcp.yaml@main
