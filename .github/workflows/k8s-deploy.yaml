@@ -37,9 +37,7 @@ jobs:
           kubectl apply -f ${{ inputs.manifests_path }}/service.yaml
 
       - name: Atualizar imagem do deployment
-        run: |
-          kubectl set image deployment/${{ inputs.deployment_name }} \
-          ${{ inputs.container_name }}=${{ inputs.image_name }}
+        run: kubectl set image deployment/${{ inputs.deployment_name }} ${{ inputs.container_name }}=${{ inputs.image_name }}
 
       - name: Mostrar recursos
         run: |
