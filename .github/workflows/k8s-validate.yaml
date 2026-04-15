@@ -20,29 +20,18 @@ jobs:
         run: kubectl cluster-info
 
       - name: Validar rollout do deployment
-        run: kubectl rollout status deployment/${{ inputs.deployment_name }} --namespace=${{ inputs.namespace }}
+        run: |
+          kubectl rollout status deployment/${{ inputs.deployment_name }} \
+          --namespace=${{ inputs.namespace }}
 
       - name: Listar deployments
-        if: always()
         run: kubectl get deployments -n ${{ inputs.namespace }}
 
       - name: Listar pods
-        if: always()
-        run: kubectl get pods -n ${{ inputs.namespace }} -o wide
+        run: kubectl get pods -n ${{ inputs.namespace }}
 
       - name: Listar services
-        if: always()
         run: kubectl get svc -n ${{ inputs.namespace }}
 
       - name: Descrever deployment
-        if: always()
         run: kubectl describe deployment ${{ inputs.deployment_name }} -n ${{ inputs.namespace }}
-
-      - name: Descrever pods
-        if: always()
-        run: kubectl describe pods -n ${{ inputs.namespace }}
-
-      - name: Logs dos pods
-        if: always()
-        continue-on-error: true
-        run: kubectl logs -n ${{ inputs.namespace }} -l app=${{ inputs.deployment_name }} --all-containers=true
