@@ -41,7 +41,7 @@ jobs:
     needs: [docker-build]
     uses: mateus0507/pipeline-templates/.github/workflows/k8s-deploy.yaml@main
     with:
-      image_name: mateussousa/minha-app:1
+      image_name: ${{ inputs.STACK_TYPE }}-app:${{ github.sha }}
       deployment_name: minha-app
       container_name: minha-app
       manifests_path: ./k8s
