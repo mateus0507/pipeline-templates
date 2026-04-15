@@ -44,4 +44,5 @@ jobs:
 
       - name: Logs dos pods
         if: always()
+        continue-on-error: true
         run: kubectl logs -n ${{ inputs.namespace }} -l app=${{ inputs.deployment_name }} --all-containers=true
