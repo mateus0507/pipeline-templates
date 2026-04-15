@@ -20,9 +20,7 @@ jobs:
         run: kubectl cluster-info
 
       - name: Validar rollout do deployment
-        run: |
-          kubectl rollout status deployment/${{ inputs.deployment_name }} \
-          --namespace=${{ inputs.namespace }}
+        run: kubectl rollout status deployment/${{ inputs.deployment_name }} --namespace=${{ inputs.namespace }}
 
       - name: Listar deployments
         run: kubectl get deployments -n ${{ inputs.namespace }}
