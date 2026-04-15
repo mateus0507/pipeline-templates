@@ -23,13 +23,33 @@ jobs:
         run: kubectl rollout status deployment/${{ inputs.deployment_name }} --namespace=${{ inputs.namespace }}
 
       - name: Listar deployments
+        if: always()
         run: kubectl get deployments -n ${{ inputs.namespace }}
 
       - name: Listar pods
-        run: kubectl get pods -n ${{ inputs.namespace }}
+        if: always()
+        run: kubectl get pods -o wide -n ${{ inputs.namespace }}
 
       - name: Listar services
+        if: always()
         run: kubectl get svc -n ${{ inputs.namespace }}
 
       - name: Descrever deployment
+        if: always()
         run: kubectl describe deployment ${{ inputs.deployment_name }} -n ${{ inputs.namespace }}
+
+      - name: Descrever primeiro pod
+        if: always()
+        shell: powershell
+        run: |
+          $pod = kubectl get pods -n ${{ inputs.namespace }} -o jsonpath="{.items[0].metadata.name}"
+          Write-Host "Pod encontrado: $pod"
+          kubectl describe pod $pod -n ${{ inputs.namespace }}
+
+      - name: Logs do primeiro pod
+        if: always()
+        shell: powershell
+        run: |
+          $pod = kubectl get pods -n ${{ inputs.namespace }} -o jsonpath="{.items[0].metadata.name}"
+          Write-Host "Pod encontrado: $pod"
+          kubectl logs $pod -n ${{ inputs.namespace }}
