@@ -28,8 +28,21 @@ jobs:
       - name: Verificar kubectl
         run: kubectl version --client
 
+      - name: Aguardar Minikube
+        shell: powershell
+        run: |
+          minikube status
+          minikube start --driver=docker
+          minikube update-context
+          kubectl config use-context minikube
+          kubectl get nodes
+
       - name: Verificar cluster
-        run: kubectl cluster-info
+        shell: powershell
+        run: |
+          kubectl config current-context
+          kubectl get nodes
+          kubectl cluster-info
 
       - name: Aplicar manifestos
         run: |
