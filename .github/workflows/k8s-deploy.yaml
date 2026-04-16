@@ -52,6 +52,10 @@ jobs:
           kubectl apply -f ${{ inputs.manifests_path }}/deployment.yaml
           kubectl apply -f ${{ inputs.manifests_path }}/service.yaml
 
+      - name: DEBUG - mostrar imagem final
+        run: echo "${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}"
+
+
       - name: Atualizar imagem do deployment
         run: kubectl set image deployment/${{ inputs.deployment_name }} ${{ inputs.container_name }}=${{ inputs.image_name }}
 
