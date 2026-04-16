@@ -17,39 +17,69 @@ jobs:
 
     steps:
       - name: Verificar cluster
-        run: kubectl cluster-info
+        shell: powershell
+        run: |
+          kubectl config current-context
+          kubectl cluster-info
+          kubectl get nodes
 
       - name: Validar rollout do deployment
-        run: kubectl rollout status deployment/${{ inputs.deployment_name }} --namespace=${{ inputs.namespace }}
+        shell: powershell
+        continue-on-error: true
+        run: |
+          kubectl rollout status deployment/${{ inputs.deployment_name }} --namespace=${{ inputs.namespace }} --timeout=120s
 
       - name: Listar deployments
         if: always()
-        run: kubectl get deployments -n ${{ inputs.namespace }}
+        shell: powershell
+        run: |
+          kubectl get deployments -n ${{ inputs.namespace }}
 
       - name: Listar pods
         if: always()
-        run: kubectl get pods -o wide -n ${{ inputs.namespace }}
+        shell: powershell
+        run: |
+          kubectl get pods -o wide -n ${{ inputs.namespace }}
 
       - name: Listar services
         if: always()
-        run: kubectl get svc -n ${{ inputs.namespace }}
+        shell: powershell
+        run: |
+          kubectl get svc -n ${{ inputs.namespace }}
 
       - name: Descrever deployment
         if: always()
-        run: kubectl describe deployment ${{ inputs.deployment_name }} -n ${{ inputs.namespace }}
+        shell: powershell
+        run: |
+          kubectl describe deployment ${{ inputs.deployment_name }} -n ${{ inputs.namespace }}
+
+      - name: Capturar nome do primeiro pod
+        if: always()
+        shell: powershell
+        run: |
+          $pod = kubectl get pods -n ${{ inputs.namespace }} -o jsonpath="{.items[0].metadata.name}"
+          Write-Host "Pod encontrado: $pod"
+          "POD_NAME=$pod" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Descrever primeiro pod
         if: always()
         shell: powershell
+        continue-on-error: true
         run: |
-          $pod = kubectl get pods -n ${{ inputs.namespace }} -o jsonpath="{.items[0].metadata.name}"
-          Write-Host "Pod encontrado: $pod"
-          kubectl describe pod $pod -n ${{ inputs.namespace }}
+          kubectl describe pod $env:POD_NAME -n ${{ inputs.namespace }}
 
-      - name: Logs do primeiro pod
+      - name: Mostrar logs do primeiro pod
         if: always()
         shell: powershell
+        continue-on-error: true
         run: |
-          $pod = kubectl get pods -n ${{ inputs.namespace }} -o jsonpath="{.items[0].metadata.name}"
-          Write-Host "Pod encontrado: $pod"
-          kubectl logs $pod -n ${{ inputs.namespace }}
+          kubectl logs $env:POD_NAME -n ${{ inputs.namespace }}
+
+      - name: Falhar pipeline se rollout não estiver saudável
+        shell: powershell
+        run: |
+          $status = kubectl get deployment ${{ inputs.deployment_name }} -n ${{ inputs.namespace }} -o jsonpath="{.status.availableReplicas}"
+          if (-not $status -or $status -eq "0") {
+            Write-Error "Deployment não ficou disponível."
+            exit 1
+          }
