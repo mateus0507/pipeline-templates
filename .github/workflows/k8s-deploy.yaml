@@ -16,11 +16,6 @@ on:
         required: false
         type: string
         default: ./k8s
-    secrets:
-      DOCKERHUB_USERNAME:
-        required: true
-      DOCKERHUB_TOKEN:
-        required: true
 
 jobs:
   deploy:
@@ -55,8 +50,8 @@ jobs:
           kubectl apply -f ${{ inputs.manifests_path }}/service.yaml
 
       - name: Atualizar imagem do deployment
-        run: kubectl set image deployment/${{ inputs.deployment_name }} ${{ inputs.container_name }}=${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}
-      
+        run: kubectl set image deployment/${{ inputs.deployment_name }} ${{ inputs.container_name }}=${{ inputs.image_name }}
+        
       - name: Mostrar recursos
         run: |
           kubectl get deployments
