@@ -16,6 +16,9 @@ on:
         required: false
         type: string
         default: ./k8s
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
 
 jobs:
   deploy:

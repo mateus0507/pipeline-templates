@@ -40,6 +40,8 @@ jobs:
   deploy-k8s:
     needs: [docker-build]
     uses: mateus0507/pipeline-templates/.github/workflows/k8s-deploy.yaml@main
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
     with:
       image_name: ${{ inputs.STACK_TYPE }}-app:${{ github.sha }}
       deployment_name: minha-app
