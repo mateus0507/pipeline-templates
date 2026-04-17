@@ -47,19 +47,31 @@ jobs:
           kubectl get nodes
           kubectl cluster-info
 
+      - name: Montar nome completo da imagem
+        shell: powershell
+        run: |
+          $fullImage = "${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}"
+          Write-Host "Imagem final: $fullImage"
+          "FULL_IMAGE=$fullImage" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Substituir imagem no deployment
+        shell: powershell
+        run: |
+          (Get-Content "${{ inputs.manifests_path }}/deployment.yaml") `
+            -replace 'IMAGE_PLACEHOLDER', $env:FULL_IMAGE `
+            | Set-Content "${{ inputs.manifests_path }}/deployment.yaml"
+
+          Write-Host "Deployment final:"
+          Get-Content "${{ inputs.manifests_path }}/deployment.yaml"
+
       - name: Aplicar manifestos
+        shell: powershell
         run: |
           kubectl apply -f ${{ inputs.manifests_path }}/deployment.yaml
           kubectl apply -f ${{ inputs.manifests_path }}/service.yaml
 
-      - name: DEBUG - mostrar imagem final
-        run: echo "${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}"
-
-
-      - name: Atualizar imagem do deployment
-        run: kubectl set image deployment/${{ inputs.deployment_name }} ${{ inputs.container_name }}=${{ inputs.image_name }}
-
       - name: Mostrar recursos
+        shell: powershell
         run: |
           kubectl get deployments
           kubectl get pods
