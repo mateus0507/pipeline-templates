@@ -54,14 +54,16 @@ jobs:
           Write-Host "Imagem final: $fullImage"  # Exibe a imagem final
           "FULL_IMAGE=$fullImage" | Out-File -FilePath $env:GITHUB_ENV -Append  # Salva como variável de ambiente
 
-      - name: Substituir imagem no deployment  # Substitui o placeholder no YAML pela imagem real
+      - name: Substituir imagem no deployment
         shell: powershell
         run: |
-          (Get-Content "${{ inputs.manifests_path }}/deployment.yaml") `  # Lê o arquivo deployment.yaml
-            -replace 'IMAGE_PLACEHOLDER', $env:FULL_IMAGE `  # Substitui pelo nome da imagem
-            | Set-Content "${{ inputs.manifests_path }}/deployment.yaml"  # Salva o arquivo atualizado
+          # Lê o arquivo deployment.yaml e substitui a imagem
+          (Get-Content "${{ inputs.manifests_path }}/deployment.yaml") `
+            -replace 'IMAGE_PLACEHOLDER', $env:FULL_IMAGE `
+            | Set-Content "${{ inputs.manifests_path }}/deployment.yaml"
 
-          Write-Host "Deployment final:"  # Mostra o conteúdo final do deployment
+          # Mostra o resultado final
+          Write-Host "Deployment final:"
           Get-Content "${{ inputs.manifests_path }}/deployment.yaml"
 
       - name: Aplicar manifestos  # Aplica os arquivos YAML no Kubernetes
