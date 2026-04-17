@@ -1,78 +1,78 @@
-name: Deploy Kubernetes
+name: Deploy Kubernetes  # Nome do workflow responsável pelo deploy
 
 on:
-  workflow_call:
+  workflow_call:  # Permite reutilizar esse workflow em outros pipelines
     inputs:
-      image_name:
+      image_name:  # Nome da imagem que será usada no deploy
         required: true
         type: string
-      deployment_name:
+      deployment_name:  # Nome do deployment no Kubernetes
         required: true
         type: string
-      container_name:
+      container_name:  # Nome do container dentro do deployment
         required: true
         type: string
-      manifests_path:
+      manifests_path:  # Caminho onde estão os arquivos YAML (deployment/service)
         required: false
         type: string
-        default: ./k8s
+        default: ./k8s  # Caminho padrão
     secrets:
-      DOCKERHUB_USERNAME:
+      DOCKERHUB_USERNAME:  # Usuário do Docker Hub (usado para montar a imagem completa)
         required: true
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: self-hosted  # Executa em runner próprio (máquina local/servidor)
 
     steps:
-      - name: Checkout do código
+      - name: Checkout do código  # Baixa o código do repositório
         uses: actions/checkout@v4
 
-      - name: Verificar kubectl
+      - name: Verificar kubectl  # Verifica se o kubectl está instalado
         run: kubectl version --client
 
-      - name: Aguardar Minikube
+      - name: Aguardar Minikube  # Garante que o Minikube está rodando
         shell: powershell
         run: |
-          minikube status
-          minikube start --driver=docker
-          minikube update-context
-          kubectl config use-context minikube
-          kubectl get nodes
+          minikube status  # Mostra o status atual do Minikube
+          minikube start --driver=docker  # Inicia o cluster caso não esteja rodando
+          minikube update-context  # Atualiza o contexto do kubectl
+          kubectl config use-context minikube  # Define o contexto para o Minikube
+          kubectl get nodes  # Verifica se o node está disponível
 
-      - name: Verificar cluster
+      - name: Verificar cluster  # Mostra informações do cluster Kubernetes
         shell: powershell
         run: |
-          kubectl config current-context
-          kubectl get nodes
-          kubectl cluster-info
+          kubectl config current-context  # Mostra o contexto atual
+          kubectl get nodes  # Lista os nodes
+          kubectl cluster-info  # Informações gerais do cluster
 
-      - name: Montar nome completo da imagem
+      - name: Montar nome completo da imagem  # Monta o nome da imagem com usuário + nome + tag
         shell: powershell
         run: |
-          $fullImage = "${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}"
-          Write-Host "Imagem final: $fullImage"
-          "FULL_IMAGE=$fullImage" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $fullImage = "${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}"  # Junta usuário + imagem
+          Write-Host "Imagem final: $fullImage"  # Exibe a imagem final
+          "FULL_IMAGE=$fullImage" | Out-File -FilePath $env:GITHUB_ENV -Append  # Salva como variável de ambiente
 
-      - name: Substituir imagem no deployment
+      - name: Substituir imagem no deployment  # Substitui o placeholder no YAML pela imagem real
         shell: powershell
         run: |
-          (Get-Content "${{ inputs.manifests_path }}/deployment.yaml") `
-            -replace 'IMAGE_PLACEHOLDER', $env:FULL_IMAGE `
-            | Set-Content "${{ inputs.manifests_path }}/deployment.yaml"
+          (Get-Content "${{ inputs.manifests_path }}/deployment.yaml") `  # Lê o arquivo deployment.yaml
+            -replace 'IMAGE_PLACEHOLDER', $env:FULL_IMAGE `  # Substitui pelo nome da imagem
+            | Set-Content "${{ inputs.manifests_path }}/deployment.yaml"  # Salva o arquivo atualizado
 
-          Write-Host "Deployment final:"
+          Write-Host "Deployment final:"  # Mostra o conteúdo final do deployment
           Get-Content "${{ inputs.manifests_path }}/deployment.yaml"
 
-      - name: Aplicar manifestos
+      - name: Aplicar manifestos  # Aplica os arquivos YAML no Kubernetes
         shell: powershell
         run: |
-          kubectl apply -f ${{ inputs.manifests_path }}/deployment.yaml
-          kubectl apply -f ${{ inputs.manifests_path }}/service.yaml
+          kubectl apply -f ${{ inputs.manifests_path }}/deployment.yaml  # Cria/atualiza o deployment
+          kubectl apply -f ${{ inputs.manifests_path }}/service.yaml  # Cria/atualiza o service
 
-      - name: Mostrar recursos
+      - name: Mostrar recursos  # Mostra o estado atual dos recursos no cluster
         shell: powershell
         run: |
-          kubectl get deployments
-          kubectl get pods
-          kubectl get svc
+          kubectl get deployments  # Lista deployments
+          kubectl get pods  # Lista pods
+          kubectl get svc  # Lista serviços

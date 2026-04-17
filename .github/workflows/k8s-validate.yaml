@@ -1,85 +1,85 @@
-name: Validate Kubernetes
+name: Validate Kubernetes  # Nome do workflow
 
 on:
-  workflow_call:
+  workflow_call:  # Permite que esse workflow seja reutilizado por outros workflows
     inputs:
-      deployment_name:
+      deployment_name:  # Nome do deployment que será validado
         required: true
         type: string
-      namespace:
+      namespace:  # Namespace do Kubernetes (opcional)
         required: false
         type: string
-        default: default
+        default: default  # Valor padrão caso não seja informado
 
 jobs:
-  validate:
-    runs-on: self-hosted
+  validate:  # Nome do job de validação
+    runs-on: self-hosted  # Executa em um runner próprio (máquina local ou servidor)
 
     steps:
-      - name: Verificar cluster
+      - name: Verificar cluster  # Verifica se o cluster Kubernetes está acessível
         shell: powershell
         run: |
-          kubectl config current-context
-          kubectl cluster-info
-          kubectl get nodes
+          kubectl config current-context  # Mostra o contexto atual do kubectl
+          kubectl cluster-info  # Exibe informações do cluster
+          kubectl get nodes  # Lista os nodes disponíveis no cluster
 
-      - name: Validar rollout do deployment
+      - name: Validar rollout do deployment  # Verifica se o deployment foi atualizado corretamente
         shell: powershell
-        continue-on-error: true
+        continue-on-error: true  # Continua mesmo que esse passo falhe (não interrompe o workflow)
         run: |
-          kubectl rollout status deployment/${{ inputs.deployment_name }} --namespace=${{ inputs.namespace }} --timeout=120s
+          kubectl rollout status deployment/${{ inputs.deployment_name }} --namespace=${{ inputs.namespace }} --timeout=120s  # Aguarda rollout finalizar (máx 120s)
 
-      - name: Listar deployments
-        if: always()
+      - name: Listar deployments  # Lista todos os deployments no namespace
+        if: always()  # Executa independente de erro nos passos anteriores
         shell: powershell
         run: |
           kubectl get deployments -n ${{ inputs.namespace }}
 
-      - name: Listar pods
+      - name: Listar pods  # Lista todos os pods com mais detalhes
         if: always()
         shell: powershell
         run: |
           kubectl get pods -o wide -n ${{ inputs.namespace }}
 
-      - name: Listar services
+      - name: Listar services  # Lista os serviços expostos no Kubernetes
         if: always()
         shell: powershell
         run: |
           kubectl get svc -n ${{ inputs.namespace }}
 
-      - name: Descrever deployment
+      - name: Descrever deployment  # Mostra detalhes completos do deployment
         if: always()
         shell: powershell
         run: |
           kubectl describe deployment ${{ inputs.deployment_name }} -n ${{ inputs.namespace }}
 
-      - name: Capturar nome do primeiro pod
+      - name: Capturar nome do primeiro pod  # Captura o nome de um pod para análise posterior
         if: always()
         shell: powershell
         run: |
-          $pod = kubectl get pods -n ${{ inputs.namespace }} -o jsonpath="{.items[0].metadata.name}"
-          Write-Host "Pod encontrado: $pod"
-          "POD_NAME=$pod" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $pod = kubectl get pods -n ${{ inputs.namespace }} -o jsonpath="{.items[0].metadata.name}"  # Pega o primeiro pod da lista
+          Write-Host "Pod encontrado: $pod"  # Exibe o nome do pod
+          "POD_NAME=$pod" | Out-File -FilePath $env:GITHUB_ENV -Append  # Salva o nome do pod como variável de ambiente
 
-      - name: Descrever primeiro pod
+      - name: Descrever primeiro pod  # Mostra detalhes completos do pod
         if: always()
         shell: powershell
-        continue-on-error: true
+        continue-on-error: true  # Continua mesmo se falhar (ex: pod não existir)
         run: |
           kubectl describe pod $env:POD_NAME -n ${{ inputs.namespace }}
 
-      - name: Mostrar logs do primeiro pod
+      - name: Mostrar logs do primeiro pod  # Exibe logs do container dentro do pod
         if: always()
         shell: powershell
-        continue-on-error: true
+        continue-on-error: true  # Continua mesmo se falhar
         run: |
           kubectl logs $env:POD_NAME -n ${{ inputs.namespace }}
 
-      - name: Falhar pipeline se rollout não estiver saudável
+      - name: Falhar pipeline se rollout não estiver saudável  # Validação final do deployment
         shell: powershell
         run: |
-          $status = kubectl get deployment ${{ inputs.deployment_name }} -n ${{ inputs.namespace }} -o jsonpath="{.status.availableReplicas}"
-          if (-not $status -or $status -eq "0") {
-            Write-Error "Deployment não ficou disponível."
-            exit 1
+          $status = kubectl get deployment ${{ inputs.deployment_name }} -n ${{ inputs.namespace }} -o jsonpath="{.status.availableReplicas}"  # Verifica quantas réplicas estão disponíveis
+          if (-not $status -or $status -eq "0") {  # Se não houver réplicas disponíveis
+            Write-Error "Deployment não ficou disponível."  # Exibe erro
+            exit 1  # Falha a pipeline
           }
