@@ -37,8 +37,13 @@ jobs:
       context_dir: .    # Diretório base do build (raiz do projeto)
       version: ${{ inputs.version || '22' }}
 
-  deploy-k8s:
+
+  validate-structure:
     needs: [docker-build]
+    uses: mateus0507/pipeline-templates/.github/workflows/validate-structure.yaml@main
+
+  deploy-k8s:
+    needs: [validate-structure]
     uses: mateus0507/pipeline-templates/.github/workflows/k8s-deploy.yaml@main
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

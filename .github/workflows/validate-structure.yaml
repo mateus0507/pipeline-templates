@@ -1,0 +1,36 @@
+name: Validate Structure
+
+on:
+  workflow_call:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validar estrutura da aplicação
+        run: |
+          APP_PATH="apps/app.node"
+          FILE="$APP_PATH/deployment"
+
+          echo "🔍 Validando estrutura..."
+
+          if [ -d "$APP_PATH" ]; then
+            if [ -f "$FILE" ]; then
+              echo "✅ OK: arquivo deployment já existe"
+            else
+              echo "⚠️ Arquivo deployment não existe, criando..."
+
+              cat <<EOF > "$FILE"
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: app-node
+              EOF
+
+              echo "🛠️ Arquivo deployment criado"
+            fi
+          else
+            echo "❌ Pasta app.node não encontrada"
+            exit 1
+          fi
