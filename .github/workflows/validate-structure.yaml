@@ -9,6 +9,13 @@ on:
       app_name:
         required: true
         type: string
+      kustomize_ref:
+        required: false
+        type: string
+        default: main
+    secrets:
+      KUSTOMIZE_TOKEN:
+        required: true
 
 jobs:
   validate-structure:
@@ -19,9 +26,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.kustomize_repo }}
+          ref: ${{ inputs.kustomize_ref }}
+          token: ${{ secrets.KUSTOMIZE_TOKEN }}
           path: kustomize
 
-      - name: Validar e criar estrutura no kustomize
+      - name: Validar, criar e marcar alteração
+        id: structure
         shell: bash
         run: |
           set -euo pipefail
@@ -30,11 +40,14 @@ jobs:
           APP_DIR="kustomize/app/${{ inputs.app_name }}"
           FILE_PATH="kustomize/app/${{ inputs.app_name }}/teste.yaml"
 
+          CHANGED=false
+
           echo "Verificando estrutura no repositório kustomize..."
 
           if [ ! -d "$BASE_DIR" ]; then
             echo "Pasta $BASE_DIR não existe. Criando..."
             mkdir -p "$BASE_DIR"
+            CHANGED=true
           else
             echo "OK: pasta $BASE_DIR já existe."
           fi
@@ -42,6 +55,7 @@ jobs:
           if [ ! -d "$APP_DIR" ]; then
             echo "Pasta $APP_DIR não existe. Criando..."
             mkdir -p "$APP_DIR"
+            CHANGED=true
           else
             echo "OK: pasta $APP_DIR já existe."
           fi
@@ -49,6 +63,7 @@ jobs:
           if [ ! -f "$FILE_PATH" ]; then
             echo "Arquivo $FILE_PATH não existe. Criando..."
             touch "$FILE_PATH"
+            CHANGED=true
           else
             echo "OK: arquivo $FILE_PATH já existe."
           fi
@@ -65,3 +80,28 @@ jobs:
             ls -la "$APP_DIR" || true
             exit 1
           fi
+
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+
+      - name: Configurar Git
+        if: steps.structure.outputs.changed == 'true'
+        shell: bash
+        run: |
+          cd kustomize
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commitar alterações
+        if: steps.structure.outputs.changed == 'true'
+        shell: bash
+        run: |
+          cd kustomize
+          git add app
+          git commit -m "chore: garantir estrutura de ${{ inputs.app_name }}"
+
+      - name: Push das alterações
+        if: steps.structure.outputs.changed == 'true'
+        shell: bash
+        run: |
+          cd kustomize
+          git push origin "${{ inputs.kustomize_ref }}"
