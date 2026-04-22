@@ -22,6 +22,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout do repositório de templates
+        uses: actions/checkout@v4
+        with:
+          repository: mateus0507/pipeline-templates
+          path: pipeline-templates
+
       - name: Checkout do repositório kustomize
         uses: actions/checkout@v4
         with:
@@ -30,58 +36,63 @@ jobs:
           token: ${{ secrets.KUSTOMIZE_TOKEN }}
           path: kustomize
 
-      - name: Validar, criar e marcar alteração
+      - name: Validar e copiar arquivos faltantes
         id: structure
         shell: bash
         run: |
           set -euo pipefail
 
-          BASE_DIR="kustomize/app"
-          APP_DIR="kustomize/app/${{ inputs.app_name }}"
-          FILE_PATH="kustomize/app/${{ inputs.app_name }}/teste.yaml"
+          TEMPLATE_DIR="pipeline-templates/scaffolds/next-app"
+          TARGET_DIR="kustomize/app/${{ inputs.app_name }}"
+
+          REQUIRED_FILES=(
+            "deployment.yaml"
+            "service.yaml"
+            "ingress.yaml"
+            "kustomization.yaml"
+            "configmap.yaml"
+          )
 
           CHANGED=false
 
-          echo "Verificando estrutura no repositório kustomize..."
+          echo "Garantindo estrutura base..."
+          mkdir -p "$TARGET_DIR"
 
-          if [ ! -d "$BASE_DIR" ]; then
-            echo "Pasta $BASE_DIR não existe. Criando..."
-            mkdir -p "$BASE_DIR"
-            CHANGED=true
-          else
-            echo "OK: pasta $BASE_DIR já existe."
-          fi
+          echo "Verificando arquivos obrigatórios..."
+          for file in "${REQUIRED_FILES[@]}"; do
+            SOURCE_FILE="$TEMPLATE_DIR/$file"
+            TARGET_FILE="$TARGET_DIR/$file"
 
-          if [ ! -d "$APP_DIR" ]; then
-            echo "Pasta $APP_DIR não existe. Criando..."
-            mkdir -p "$APP_DIR"
-            CHANGED=true
-          else
-            echo "OK: pasta $APP_DIR já existe."
-          fi
+            if [ ! -f "$SOURCE_FILE" ]; then
+              echo "Erro: template $SOURCE_FILE não encontrado."
+              exit 1
+            fi
 
-          if [ ! -f "$FILE_PATH" ]; then
-            echo "Arquivo $FILE_PATH não existe. Criando..."
-            touch "$FILE_PATH"
-            CHANGED=true
-          else
-            echo "OK: arquivo $FILE_PATH já existe."
-          fi
+            if [ ! -f "$TARGET_FILE" ]; then
+              echo "Arquivo $TARGET_FILE não existe. Copiando template..."
+              cp "$SOURCE_FILE" "$TARGET_FILE"
+              CHANGED=true
+            else
+              echo "OK: $TARGET_FILE já existe."
+            fi
+          done
 
-          echo "Revalidando estrutura..."
+          echo "Revalidando estrutura final..."
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$TARGET_DIR/$file" ]; then
+              echo "Erro: arquivo obrigatório ausente após cópia: $TARGET_DIR/$file"
+              exit 1
+            fi
+          done
 
-          if [ -d "$BASE_DIR" ] && [ -d "$APP_DIR" ] && [ -f "$FILE_PATH" ]; then
-            echo "Estrutura validada com sucesso. Pipeline pode continuar."
-          else
-            echo "Erro: a estrutura esperada não foi criada corretamente."
-            echo "Estado atual:"
-            ls -la kustomize || true
-            ls -la "$BASE_DIR" || true
-            ls -la "$APP_DIR" || true
-            exit 1
-          fi
-
+          echo "Estrutura validada com sucesso."
           echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+
+      - name: Mostrar estrutura final
+        shell: bash
+        run: |
+          echo "Conteúdo final em kustomize/app/${{ inputs.app_name }}:"
+          ls -la "kustomize/app/${{ inputs.app_name }}"
 
       - name: Configurar Git
         if: steps.structure.outputs.changed == 'true'
@@ -97,7 +108,7 @@ jobs:
         run: |
           cd kustomize
           git add app
-          git commit -m "chore: garantir estrutura de ${{ inputs.app_name }}"
+          git commit -m "chore: garantir estrutura base para ${{ inputs.app_name }}"
 
       - name: Push das alterações
         if: steps.structure.outputs.changed == 'true'
