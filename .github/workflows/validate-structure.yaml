@@ -4,33 +4,54 @@ on:
   workflow_call:
 
 jobs:
-  validate:
+  validate-structure:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Validar estrutura da aplicação
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Garantir estrutura app/node/teste.yaml
+        shell: bash
         run: |
-          APP_PATH="apps/app.node"
-          FILE="$APP_PATH/deployment"
+          set -euo pipefail
 
-          echo "🔍 Validando estrutura..."
+          APP_DIR="app"
+          NODE_DIR="app/node"
+          FILE_PATH="app/node/teste.yaml"
 
-          if [ -d "$APP_PATH" ]; then
-            if [ -f "$FILE" ]; then
-              echo "✅ OK: arquivo deployment já existe"
-            else
-              echo "⚠️ Arquivo deployment não existe, criando..."
+          echo "Verificando estrutura inicial..."
 
-              cat <<EOF > "$FILE"
-              apiVersion: apps/v1
-              kind: Deployment
-              metadata:
-                name: app-node
-              EOF
-
-              echo "🛠️ Arquivo deployment criado"
-            fi
+          if [ ! -d "$APP_DIR" ]; then
+            echo "Pasta $APP_DIR não existe. Criando..."
+            mkdir -p "$APP_DIR"
           else
-            echo "❌ Pasta app.node não encontrada"
+            echo "OK: pasta $APP_DIR já existe."
+          fi
+
+          if [ ! -d "$NODE_DIR" ]; then
+            echo "Pasta $NODE_DIR não existe. Criando..."
+            mkdir -p "$NODE_DIR"
+          else
+            echo "OK: pasta $NODE_DIR já existe."
+          fi
+
+          if [ ! -f "$FILE_PATH" ]; then
+            echo "Arquivo $FILE_PATH não existe. Criando..."
+            touch "$FILE_PATH"
+          else
+            echo "OK: arquivo $FILE_PATH já existe."
+          fi
+
+          echo "Revalidando estrutura após criação..."
+
+          if [ -d "$APP_DIR" ] && [ -d "$NODE_DIR" ] && [ -f "$FILE_PATH" ]; then
+            echo "Estrutura validada com sucesso. Pipeline pode continuar."
+          else
+            echo "Erro: a estrutura esperada não foi criada corretamente."
+            echo "Estado atual:"
+            ls -la
+            ls -la "$APP_DIR" || true
+            ls -la "$NODE_DIR" || true
             exit 1
           fi
