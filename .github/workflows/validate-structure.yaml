@@ -2,38 +2,48 @@ name: Validate Structure
 
 on:
   workflow_call:
+    inputs:
+      kustomize_repo:
+        required: true
+        type: string
+      app_name:
+        required: true
+        type: string
 
 jobs:
   validate-structure:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do repositório
+      - name: Checkout do repositório kustomize
         uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.kustomize_repo }}
+          path: kustomize
 
-      - name: Garantir estrutura app/node/teste.yaml
+      - name: Validar e criar estrutura no kustomize
         shell: bash
         run: |
           set -euo pipefail
 
-          APP_DIR="app"
-          NODE_DIR="app/node"
-          FILE_PATH="app/node/teste.yaml"
+          BASE_DIR="kustomize/app"
+          APP_DIR="kustomize/app/${{ inputs.app_name }}"
+          FILE_PATH="kustomize/app/${{ inputs.app_name }}/teste.yaml"
 
-          echo "Verificando estrutura inicial..."
+          echo "Verificando estrutura no repositório kustomize..."
+
+          if [ ! -d "$BASE_DIR" ]; then
+            echo "Pasta $BASE_DIR não existe. Criando..."
+            mkdir -p "$BASE_DIR"
+          else
+            echo "OK: pasta $BASE_DIR já existe."
+          fi
 
           if [ ! -d "$APP_DIR" ]; then
             echo "Pasta $APP_DIR não existe. Criando..."
             mkdir -p "$APP_DIR"
           else
             echo "OK: pasta $APP_DIR já existe."
-          fi
-
-          if [ ! -d "$NODE_DIR" ]; then
-            echo "Pasta $NODE_DIR não existe. Criando..."
-            mkdir -p "$NODE_DIR"
-          else
-            echo "OK: pasta $NODE_DIR já existe."
           fi
 
           if [ ! -f "$FILE_PATH" ]; then
@@ -43,15 +53,15 @@ jobs:
             echo "OK: arquivo $FILE_PATH já existe."
           fi
 
-          echo "Revalidando estrutura após criação..."
+          echo "Revalidando estrutura..."
 
-          if [ -d "$APP_DIR" ] && [ -d "$NODE_DIR" ] && [ -f "$FILE_PATH" ]; then
+          if [ -d "$BASE_DIR" ] && [ -d "$APP_DIR" ] && [ -f "$FILE_PATH" ]; then
             echo "Estrutura validada com sucesso. Pipeline pode continuar."
           else
             echo "Erro: a estrutura esperada não foi criada corretamente."
             echo "Estado atual:"
-            ls -la
+            ls -la kustomize || true
+            ls -la "$BASE_DIR" || true
             ls -la "$APP_DIR" || true
-            ls -la "$NODE_DIR" || true
             exit 1
           fi

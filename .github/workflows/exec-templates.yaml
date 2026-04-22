@@ -41,6 +41,9 @@ jobs:
   validate-structure:
     needs: [docker-build]
     uses: mateus0507/pipeline-templates/.github/workflows/validate-structure.yaml@main
+    with:
+      kustomize_repo: mateus0507/kustomize
+      app_name: next-app
 
   deploy-k8s:
     needs: [validate-structure]
