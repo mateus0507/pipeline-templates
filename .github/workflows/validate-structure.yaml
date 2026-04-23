@@ -44,24 +44,28 @@ jobs:
 
           TEMPLATE_DIR="pipeline-templates/scaffolds/next-app"
           TARGET_DIR="kustomize/app/${{ inputs.app_name }}"
-
-          REQUIRED_FILES=(
-            "deployment.yaml"
-            "service.yaml"
-            "ingress.yaml"
-            "kustomization.yaml"
-            "configmap.yaml"
-          )
+          APP_NAME="${{ inputs.app_name }}"
 
           CHANGED=false
 
           echo "Garantindo estrutura base..."
           mkdir -p "$TARGET_DIR"
 
+          declare -A FILE_MAP=(
+            ["deployment.yaml"]="$APP_NAME-deployment.yaml"
+            ["service.yaml"]="$APP_NAME-service.yaml"
+            ["ingress.yaml"]="$APP_NAME-ingress.yaml"
+            ["configmap.yaml"]="$APP_NAME-configmap.yaml"
+            ["kustomization.yaml"]="kustomization.yaml"
+          )
+
           echo "Verificando arquivos obrigatórios..."
-          for file in "${REQUIRED_FILES[@]}"; do
-            SOURCE_FILE="$TEMPLATE_DIR/$file"
-            TARGET_FILE="$TARGET_DIR/$file"
+
+          for source in "${!FILE_MAP[@]}"; do
+            target="${FILE_MAP[$source]}"
+
+            SOURCE_FILE="$TEMPLATE_DIR/$source"
+            TARGET_FILE="$TARGET_DIR/$target"
 
             if [ ! -f "$SOURCE_FILE" ]; then
               echo "Erro: template $SOURCE_FILE não encontrado."
@@ -78,9 +82,12 @@ jobs:
           done
 
           echo "Revalidando estrutura final..."
-          for file in "${REQUIRED_FILES[@]}"; do
-            if [ ! -f "$TARGET_DIR/$file" ]; then
-              echo "Erro: arquivo obrigatório ausente após cópia: $TARGET_DIR/$file"
+
+          for source in "${!FILE_MAP[@]}"; do
+            target="${FILE_MAP[$source]}"
+
+            if [ ! -f "$TARGET_DIR/$target" ]; then
+              echo "Erro: arquivo obrigatório ausente: $TARGET_DIR/$target"
               exit 1
             fi
           done
