@@ -11,9 +11,6 @@ on:
       version: # Versão do Node.js a ser usada nos builds
         required: false
         type: string
-      APP_NAME:
-        required: true
-        type: string
     secrets: 
       DOCKERHUB_USERNAME:
         required: true
@@ -45,7 +42,7 @@ jobs:
     uses: mateus0507/pipeline-templates/.github/workflows/validate-structure.yaml@main
     with:
       kustomize_repo: mateus0507/kustomize
-      app_name: ${{ inputs.APP_NAME }}
+      app_name: ${{ github.event.repository.name }}
     secrets:
       KUSTOMIZE_TOKEN: ${{ secrets.KUSTOMIZE_TOKEN }}
 
