@@ -50,12 +50,12 @@ jobs:
 
           echo "Garantindo estrutura base..."
           mkdir -p "$TARGET_DIR"
-
+          
           declare -A FILE_MAP=(
-            ["deployment.yaml"]="$APP_NAME-deployment.yaml"
-            ["service.yaml"]="$APP_NAME-service.yaml"
-            ["ingress.yaml"]="$APP_NAME-ingress.yaml"
-            ["configmap.yaml"]="$APP_NAME-configmap.yaml"
+            ["deployment.yaml"]="deployment.yaml"
+            ["service.yaml"]="service.yaml"
+            ["ingress.yaml"]="ingress.yaml"
+            ["configmap.yaml"]="configmap.yaml"
             ["kustomization.yaml"]="kustomization.yaml"
           )
 
