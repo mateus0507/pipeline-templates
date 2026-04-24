@@ -66,24 +66,33 @@ jobs:
 
             SOURCE_FILE="$TEMPLATE_DIR/$source"
             TARGET_FILE="$TARGET_DIR/$target"
+            TEMP_FILE="$(mktemp)"
 
             if [ ! -f "$SOURCE_FILE" ]; then
               echo "Erro: template $SOURCE_FILE não encontrado."
               exit 1
             fi
 
+            echo "Gerando arquivo esperado para $target..."
+
+            cp "$SOURCE_FILE" "$TEMP_FILE"
+            sed -i "s/{{APP_NAME}}/$APP_NAME/g" "$TEMP_FILE"
+
             if [ ! -f "$TARGET_FILE" ]; then
-              echo "Arquivo $TARGET_FILE não existe. Copiando template..."
-
-              cp "$SOURCE_FILE" "$TARGET_FILE"
-
-              echo "Substituindo variáveis no arquivo..."
-              sed -i "s/{{APP_NAME}}/$APP_NAME/g" "$TARGET_FILE"
-
+              echo "Arquivo $TARGET_FILE não existe. Criando..."
+              cp "$TEMP_FILE" "$TARGET_FILE"
               CHANGED=true
             else
-              echo "OK: $TARGET_FILE já existe."
+              if ! cmp -s "$TEMP_FILE" "$TARGET_FILE"; then
+                echo "Arquivo $TARGET_FILE está diferente do template. Atualizando..."
+                cp "$TEMP_FILE" "$TARGET_FILE"
+                CHANGED=true
+              else
+                echo "OK: $TARGET_FILE já está atualizado."
+              fi
             fi
+
+            rm -f "$TEMP_FILE"
           done
 
           echo "Revalidando estrutura final..."
