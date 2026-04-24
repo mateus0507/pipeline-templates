@@ -42,7 +42,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          TEMPLATE_DIR="pipeline-templates/scaffolds/next-app"
+          TEMPLATE_DIR="pipeline-templates/modelos/aplication"
           TARGET_DIR="kustomize/app/${{ inputs.app_name }}"
           APP_NAME="${{ inputs.app_name }}"
 
