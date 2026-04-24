@@ -47,7 +47,7 @@ jobs:
       KUSTOMIZE_TOKEN: ${{ secrets.KUSTOMIZE_TOKEN }}
 
   deploy-k8s:
-    needs: [validate-structure]
+    needs: [validate-structure, docker-build]
     uses: Mat3us-tech/pipeline-templates/.github/workflows/k8s-deploy.yaml@main
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
