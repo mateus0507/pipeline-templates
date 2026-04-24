@@ -25,7 +25,7 @@ jobs:
       - name: Checkout do repositório de templates
         uses: actions/checkout@v4
         with:
-          repository: mateus0507/pipeline-templates
+          repository: Mat3us-tech/pipeline-templates
           path: pipeline-templates
 
       - name: Checkout do repositório kustomize
