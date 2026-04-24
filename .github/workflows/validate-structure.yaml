@@ -74,7 +74,12 @@ jobs:
 
             if [ ! -f "$TARGET_FILE" ]; then
               echo "Arquivo $TARGET_FILE não existe. Copiando template..."
+
               cp "$SOURCE_FILE" "$TARGET_FILE"
+
+              echo "Substituindo variáveis no arquivo..."
+              sed -i "s/{{APP_NAME}}/$APP_NAME/g" "$TARGET_FILE"
+
               CHANGED=true
             else
               echo "OK: $TARGET_FILE já existe."

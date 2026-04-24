@@ -1,7 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: next-app
+  name: {{APP_NAME}}-service
+  name: {{APP_NAME}}
 spec:
   rules:
     - host: next-app.local
