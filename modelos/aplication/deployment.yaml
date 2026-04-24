@@ -1,8 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: {{APP_NAME}}-deployment
 spec:
+  literals:
+    - SERVICE_NAME={{APP_NAME}}
   replicas: 1
   selector:
     matchLabels:
