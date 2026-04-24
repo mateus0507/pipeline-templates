@@ -38,7 +38,7 @@ jobs:
       version: ${{ inputs.version || '22' }}
 
   validate-structure:
-    needs: [docker-build]
+    needs: [check-sync]
     uses: Mat3us-tech/pipeline-templates/.github/workflows/validate-structure.yaml@main
     with:
       kustomize_repo: Mat3us-tech/kustomize
