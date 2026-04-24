@@ -52,11 +52,21 @@ jobs:
           mkdir -p "$TARGET_DIR"
           
           declare -A FILE_MAP=(
-            ["deployment.yaml"]="deployment.yaml"
-            ["service.yaml"]="service.yaml"
-            ["ingress.yaml"]="ingress.yaml"
-            ["configmap.yaml"]="configmap.yaml"
-            ["kustomization.yaml"]="kustomization.yaml"
+            ["base/kustomization.yaml"]="base/kustomization.yaml"
+
+            ["overlays/dev/patches/hpa.yaml"]="overlays/dev/patches/hpa.yaml"
+            ["overlays/dev/patches/ingress.yaml"]="overlays/dev/patches/ingress.yaml"
+            ["overlays/dev/patches/rollout.yaml"]="overlays/dev/patches/rollout.yaml"
+            ["overlays/dev/configmap.yaml"]="overlays/dev/configmap.yaml"
+            ["overlays/dev/externalsecret.yaml"]="overlays/dev/externalsecret.yaml"
+            ["overlays/dev/kustomization.yaml"]="overlays/dev/kustomization.yaml"
+
+            ["overlays/prd/patches/hpa.yaml"]="overlays/prd/patches/hpa.yaml"
+            ["overlays/prd/patches/ingress.yaml"]="overlays/prd/patches/ingress.yaml"
+            ["overlays/prd/patches/rollout.yaml"]="overlays/prd/patches/rollout.yaml"
+            ["overlays/prd/configmap.yaml"]="overlays/prd/configmap.yaml"
+            ["overlays/prd/externalsecret.yaml"]="overlays/prd/externalsecret.yaml"
+            ["overlays/prd/kustomization.yaml"]="overlays/prd/kustomization.yaml"
           )
 
           echo "Verificando arquivos obrigatórios..."
@@ -72,6 +82,8 @@ jobs:
               echo "Erro: template $SOURCE_FILE não encontrado."
               exit 1
             fi
+
+            mkdir -p "$(dirname "$TARGET_FILE")"
 
             echo "Gerando arquivo esperado para $target..."
 
