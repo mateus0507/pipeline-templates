@@ -9,14 +9,6 @@ on:
       tag:
         required: true
         type: string
-      app_port:
-        required: false
-        type: string
-        default: "3000"
-      health_path:
-        required: false
-        type: string
-        default: "/"
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -27,62 +19,68 @@ jobs:
   validate:
     runs-on: ubuntu-latest
 
-    env:
-      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}:${{ inputs.tag }}
-      CONTAINER_NAME: validate-${{ github.run_id }}
-      APP_PORT: ${{ inputs.app_port }}
-      HEALTH_PATH: ${{ inputs.health_path }}
-
     steps:
+
+      # Faz login no Docker Hub utilizando os secrets configurados no repositório
+      # Isso permite fazer pull de imagens privadas e autenticar corretamente
       - name: Login no Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }} # Usuário do Docker Hub
+          password: ${{ secrets.DOCKERHUB_TOKEN }}    # Token (senha segura)
 
+      # Baixa a imagem do Docker Hub utilizando o nome e a tag informados
+      # Isso garante que a imagem enviada anteriormente está acessível
       - name: Pull da imagem
         run: |
-          docker pull "$IMAGE"
+          docker pull "${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}:${{ inputs.tag }}"
 
+      # Executa o container baseado na imagem baixada
+      # -d roda em modo "detached" (em segundo plano)
+      # --name define um nome fixo para facilitar validação
+      # -p 3000:3000 expõe a porta da aplicação
       - name: Rodar container
         run: |
           docker run -d \
-            --name "$CONTAINER_NAME" \
-            -p "$APP_PORT:$APP_PORT" \
-            "$IMAGE"
+            --name teste-container \
+            -p 3000:3000 \
+            "${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}:${{ inputs.tag }}"
 
-      - name: Validar aplicação
+          # Aguarda alguns segundos para dar tempo da aplicação iniciar
+          sleep 15
+
+      # Verifica se o container realmente está rodando
+      # Se não estiver, exibe logs e força erro na pipeline (exit 1)
+      - name: Validar container
         run: |
-          echo "Validando container..."
-
-          if [ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER_NAME")" != "true" ]; then
+          if [ "$(docker inspect -f '{{.State.Running}}' teste-container)" != "true" ]; then
             echo "Erro ao subir container"
-            docker logs "$CONTAINER_NAME" || true
+            docker logs teste-container || true
             exit 1
           fi
 
+          # Caso esteja rodando, imprime mensagem de sucesso
           echo "Container rodando com sucesso"
-          echo "Testando aplicação em http://localhost:$APP_PORT$HEALTH_PATH"
 
-          for i in {1..10}; do
-            response=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$APP_PORT$HEALTH_PATH" || true)
+          echo "Testando aplicação com curl..."
 
-            echo "Tentativa $i - Status HTTP: $response"
+          response=$(curl -s -o /dev/stderr -w "%{http_code}" http://localhost:3000)
 
-            if [ "$response" = "200" ]; then
-              echo "Aplicação respondeu corretamente"
-              exit 0
-            fi
+          echo ""
+          echo "Status HTTP: $response"
 
-            sleep 3
-          done
+          if [ "$response" -ne 200 ]; then
+            echo "Erro: aplicação não respondeu com 200"
+            docker logs teste-container || true
+            exit 1
+          fi
 
-          echo "Erro: aplicação não respondeu com 200"
-          docker logs "$CONTAINER_NAME" || true
-          exit 1
+          echo "Aplicação respondeu corretamente  "
 
+      # Sempre executa (mesmo se der erro antes)
+      # Responsável por parar e remover o container de teste
       - name: Limpar container
         if: always()
         run: |
-          docker stop "$CONTAINER_NAME" || true
-          docker rm "$CONTAINER_NAME" || true
+          docker stop teste-container || true
+          docker rm teste-container || true
